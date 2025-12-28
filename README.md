@@ -1,101 +1,85 @@
-# React Component Layer Inspector
+React Inspector Pro ⚛️
 
-A lightweight Chrome/Edge extension that injects a React component inspector into web pages to visualize component layers, inspect props/state, and highlight DOM layers.
+An enterprise-grade Chrome/Edge extension that provides a deep, non-destructive look into the React Fiber tree of any website. Unlike the standard DevTools, this inspector lives directly on the page, providing real-time audits, style exploration, and code generation.
 
-Version: 1.0
+Version: 1.8.3
 
----
+Author: Sai Krishna Kanteti
 
-## Features
+🚀 Key Features
 
-- Injects [inject.js](inject.js) into the page context to access React Fiber nodes
-- Page-safe [content.js](content.js) that loads the injected script from extension resources
-- Dual theme (light/dark), draggable UI, search and layer highlight modes
-- Component health audit (performance, prop/state complexity, naming hints)
+Deep Fiber Inspection: Access Props, State, and Refs by clicking any element on the page.
 
-## Files
+Export as JSX: Instantly generate a ready-to-use React code snippet of the selected component with its current props.
 
-- [content.js](content.js) — runs in extension isolated world; injects `inject.js` into the page
-- [inject.js](inject.js) — main inspector logic injected into page context (UI, fiber traversal, audits)
-- [manifest.json](manifest.json) — extension manifest (MV3)
-- icons/ — place extension icons here (optional)
+Computed CSS Explorer: View the actual browser-calculated styles (padding, margin, font-size) alongside React metadata.
 
-## Quick Install (Load Unpacked)
+Component Search (Alt+S): Highlight every instance of a specific component across the entire page with real-time match counting.
 
-1. Open `chrome://extensions/` (or `edge://extensions/`).
-2. Enable **Developer mode**.
-3. Click **Load unpacked** and select this repository folder (the folder containing `manifest.json`).
-4. Open any page and use the extension action (if provided) or the content-script will inject automatically.
+Console Mapping: Map any Prop or State object to a global variable (temp1, temp2) for direct debugging in the browser console.
 
-Notes:
+Health & Accessibility Audit: Automated detection of "CSS Bloat," missing alt tags, and performance bottlenecks (Slow Render warnings).
 
-- The content script matches `<all_urls>` so the inspector will attempt to load on all pages where extensions are allowed.
-- While developing, reload the unpacked extension after editing files.
+Interactive UI: A draggable, themeable (Dark/Light) side panel that persists your preferences.
 
-## Development
+🛠️ Installation (Developer Mode)
 
-- Edit `inject.js` for core inspector behavior and UI.
-- `content.js` is intentionally minimal and only injects `inject.js` into the page so the inspector can access the page's React internals.
-- The inspector stores theme in `localStorage` under `ri-theme`.
+Clone the Repository:
 
-Recommended workflow:
+git clone [https://github.com/your-username/react-inspector-pro.git](https://github.com/your-username/react-inspector-pro.git)
 
-```bash
-git init
+
+Open Extensions Page: Navigate to chrome://extensions/ or edge://extensions/.
+
+Enable Developer Mode: Toggle the switch in the top right corner.
+
+Load Unpacked: Click "Load unpacked" and select the folder containing manifest.json.
+
+Start Inspecting: Open any React site (e.g., Airbnb, Netflix) and use the shortcuts below.
+
+⌨️ Keyboard Shortcuts
+
+Shortcut
+
+Action
+
+Alt + I
+
+Toggle Inspector (Enable/Disable hover highlights)
+
+Alt + S
+
+Component Search (Global finder and highlighter)
+
+Alt + L
+
+Layer Mode (Visualizes every component boundary)
+
+📂 File Structure
+
+manifest.json: Extension configuration (MV3) using world: "MAIN" for deep React access.
+
+inject.js: The core engine. Handles Fiber traversal, UI rendering, and audits.
+
+content.js: The bridge script that safely injects the inspector into the page context.
+
+icons/: Extension branding assets.
+
+🧪 Development Workflow
+
+To add new features or modify the UI:
+
+Edit inject.js.
+
+Go to chrome://extensions/ and click the Reload icon on the React Inspector Pro card.
+
+Refresh the tab where you are testing the extension.
+
+📝 License
+
+This project is open-source. Feel free to contribute by opening a Pull Request!
+
+# Recommended Commit for this version
 git add .
-git commit -m "chore: add React Component Layer Inspector"
-```
-
-## Security & Privacy
-
-- The injected script runs in the page context to access React internals; it does not transmit data externally by default. If you add telemetry or remote features, get user consent and document it.
-- Avoid loading third-party scripts from remote URLs in `inject.js`.
-
-## Package & Share
-
-### Create a distributable ZIP
-
-Use the included PowerShell helper (Windows) or the zip command (macOS/Linux) to create a ZIP ready for sharing or uploading to the Chrome Web Store.
-
-PowerShell (Windows):
-
-```powershell
-.
-powershell ./pack.ps1
-# or via npm script
-npm run pack
-```
-
-macOS / Linux:
-
-```bash
-npm run pack:unix
-# or
-zip -r ../react-inspector-extension.zip . -x '*.git*' 'node_modules/*'
-```
-
-The generated file will be `../react-inspector-extension.zip` (one level up from the repo folder).
-
-### Share options
-
-- Upload the ZIP to the Chrome Web Store (follow the developer docs).
-- Host the repo on GitHub and share the repository link so others can `Load unpacked` or download the ZIP from releases.
-- Create a release on GitHub and attach the ZIP file for easy distribution.
-
-### Create a CRX (optional)
-
-Chrome's recommended distribution is via the Web Store. Creating and sideloading a CRX is possible but requires packaging and appropriate signing and is platform/browser dependent. For most use-cases, distribute the ZIP or publish to the Web Store.
-
-## Contributing
-
-1. Fork the repo.
-2. Create a branch for your change.
-3. Open a PR with a short description and testing notes.
-
-## License
-
-Add a license file (e.g., `LICENSE`) or update this README with your chosen license.
-
----
-
-If you'd like, I can also add a sample `package.json`, a basic build script, or prepare the repo for publishing (ZIP script and prepublish checklist).
+git commit -m "feat: release v1.8.3 with JSX export, computed styles, and enhanced search"
+git push origin main

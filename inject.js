@@ -1,7 +1,7 @@
 /**
- * inject.js - React Inspector Pro (Production Edition)
- * Features: Prop/State/Ref Inspection, Event Map, Performance Audit, Dual Theme, Draggable UI.
- * VERSION: 1.5.1 - Enhanced Class/Style Visibility & DOM Attribute Mapping.
+ * inject.js - React Inspector Pro (Enterprise Suite)
+ * Features: Prop/State/Ref/Style Inspection, JSX Export, a11y Audit, Performance, Event Map.
+ * VERSION: 1.8.3 - Restored & Enhanced Search Logic (Alt+S).
  */
 
 (function() {
@@ -11,7 +11,6 @@
   let isLayerMode = false;
   let isOverlayHidden = false;
   
-  // Persistent Theme Logic
   const savedTheme = localStorage.getItem('ri-theme');
   let currentTheme = savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
   
@@ -20,9 +19,9 @@
   let searchOverlay = null;
   let allLayers = [];
 
-  // Dragging state
   let isDragging = false;
   let offsetX, offsetY;
+  let tempVarCounter = 1;
 
   // --- Theme & Style Management ---
 
@@ -54,140 +53,101 @@
         --ri-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.5);
       }
       .ri-panel-container { 
-        background: var(--ri-bg); 
-        color: var(--ri-text); 
-        box-shadow: var(--ri-shadow); 
-        border: 1px solid var(--ri-border); 
-        transition: background 0.2s, color 0.2s;
-        display: flex;
-        flex-direction: column;
+        background: var(--ri-bg); color: var(--ri-text); box-shadow: var(--ri-shadow); 
+        border: 1px solid var(--ri-border); transition: all 0.2s;
+        display: flex; flex-direction: column;
       }
       .ri-code-block { 
-        background: var(--ri-code-bg); 
-        color: var(--ri-code-text); 
-        border: 1px solid var(--ri-border); 
-        font-family: 'Fira Code', 'JetBrains Mono', 'Courier New', monospace; 
+        background: var(--ri-code-bg); color: var(--ri-code-text); border: 1px solid var(--ri-border); 
+        font-family: 'Fira Code', monospace; font-size: 11px;
       }
       .ri-breadcrumb { background: var(--ri-header-bg); color: var(--ri-text-dim); }
       
       #theme-toggle-btn, .ri-copy-icon-btn, .ri-action-btn { 
-        cursor: pointer; 
-        background: none; 
-        border: none; 
-        color: var(--ri-text-dim); 
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
-        padding: 4px; 
-        border-radius: 4px; 
-        transition: all 0.2s; 
+        cursor: pointer; background: none; border: none; color: var(--ri-text-dim); 
+        display: flex; align-items: center; justify-content: center;
+        padding: 4px; border-radius: 4px; transition: all 0.2s;
       }
       #theme-toggle-btn:hover, .ri-copy-icon-btn:hover, .ri-action-btn:hover { 
-        background: var(--ri-border); 
-        color: var(--ri-accent); 
+        background: var(--ri-border); color: var(--ri-accent); 
       }
       .ri-section-title { 
-        color: var(--ri-text-dim); 
-        font-size: 10px; 
-        font-weight: bold; 
-        text-transform: uppercase; 
-        margin-bottom: 8px; 
-        margin-top: 16px; 
-        border-bottom: 1px solid var(--ri-border); 
-        padding-bottom: 4px; 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
+        color: var(--ri-text-dim); font-size: 10px; font-weight: bold; text-transform: uppercase; 
+        margin-bottom: 8px; margin-top: 16px; border-bottom: 1px solid var(--ri-border);
+        display: flex; justify-content: space-between; align-items: center;
       }
       .ri-drag-handle { cursor: move; user-select: none; }
       
       .ri-prop-filter {
-        width: 100%;
+        width: 100%; background: var(--ri-code-bg); border: 1px solid var(--ri-border);
+        color: var(--ri-text); padding: 8px; border-radius: 6px; font-size: 11px; margin-bottom: 8px; outline: none;
+      }
+
+      .ri-perf-tag { font-size: 9px; padding: 2px 4px; border-radius: 3px; font-weight: bold; }
+      .ri-perf-fast { background: #dcfce7; color: #166534; }
+      .ri-perf-slow { background: #fee2e2; color: #991b1b; }
+
+      .ri-audit-box {
+        background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412;
+        padding: 12px; border-radius: 8px; font-size: 11px; margin-bottom: 16px; line-height: 1.5;
+      }
+      .dark .ri-audit-box { background: #431407; border: 1px solid #7c2d12; color: #fdba74; }
+
+      .ri-class-badge {
+        background: var(--ri-header-bg); border: 1px solid var(--ri-border);
+        border-radius: 6px; padding: 8px; font-size: 10px; margin-bottom: 12px; font-family: monospace; word-break: break-all;
+      }
+
+      .ri-event-pill {
+        color: var(--ri-accent); background: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.2); padding: 2px 6px; border-radius: 4px; font-size: 9px; margin-right: 4px;
+      }
+
+      .ri-layer-outline {
+        position: fixed; pointer-events: none; z-index: 2147483646;
+        border: 1px solid rgba(59, 130, 246, 0.4); background: rgba(59, 130, 246, 0.05);
+      }
+
+      .ri-btn-group { display: flex; gap: 4px; }
+      .ri-small-btn { font-size: 9px; padding: 5px 10px; border: 1px solid var(--ri-border); border-radius: 4px; cursor: pointer; background: var(--ri-bg); color: var(--ri-text-dim); transition: all 0.2s; }
+      
+      /* Fixed Hover Colors */
+      .ri-small-btn:hover { border-color: var(--ri-accent); color: var(--ri-accent); background: var(--ri-header-bg); }
+      
+      .ri-primary-btn { background: var(--ri-accent); color: white; border: none; font-weight: bold; }
+      .ri-primary-btn:hover { background: var(--ri-accent) !important; color: white !important; opacity: 0.85; transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3); }
+      
+      .ri-computed-box {
+        border-left: 3px solid var(--ri-accent);
         background: var(--ri-code-bg);
-        border: 1px solid var(--ri-border);
-        color: var(--ri-text);
-        padding: 6px 10px;
-        border-radius: 6px;
-        font-size: 11px;
-        margin-bottom: 8px;
-        outline: none;
+        margin-bottom: 16px;
+        border-radius: 0 6px 6px 0;
       }
-      .ri-prop-filter:focus { border-color: var(--ri-accent); }
+      
+      .ri-search-match-info {
+        font-size: 10px;
+        color: var(--ri-accent);
+        font-weight: bold;
+        margin-top: 8px;
+        display: block;
+      }
 
-      @keyframes ri-pulse {
-        0% { outline: 4px solid var(--ri-accent); outline-offset: 0px; }
-        100% { outline: 4px solid transparent; outline-offset: 20px; }
+      .ri-search-highlight {
+        box-shadow: 0 0 0 3px var(--ri-accent) inset, 0 0 20px var(--ri-accent);
+        transition: box-shadow 0.2s;
       }
-      .ri-locate-pulse { animation: ri-pulse 0.8s ease-out; }
 
-      @keyframes ri-fade-in-out {
-        0% { opacity: 0; transform: scale(0.8); }
-        20% { opacity: 1; transform: scale(1); }
-        80% { opacity: 1; transform: scale(1); }
-        100% { opacity: 0; transform: scale(0.8); }
-      }
       .ri-copy-success {
         color: #22c55e;
         font-size: 10px;
         font-weight: bold;
         animation: ri-fade-in-out 1.5s forwards;
       }
-      .ri-logo-container svg { display: block; width: 20px; height: 20px; }
-      .ri-perf-tag { font-size: 9px; padding: 2px 4px; border-radius: 3px; font-weight: bold; margin-left: 6px; }
-      .ri-perf-fast { background: #dcfce7; color: #166534; }
-      .ri-perf-slow { background: #fee2e2; color: #991b1b; }
-
-      .ri-layer-outline {
-        position: fixed;
-        pointer-events: none;
-        z-index: 2147483646;
-        border: 1px solid rgba(59, 130, 246, 0.4);
-        background: rgba(59, 130, 246, 0.05);
-      }
-
-      .ri-perf-advice {
-        background: #fff7ed;
-        border: 1px solid #fed7aa;
-        color: #9a3412;
-        padding: 12px;
-        border-radius: 8px;
-        font-size: 11px;
-        margin-bottom: 16px;
-        line-height: 1.5;
-      }
-      .dark .ri-perf-advice {
-        background: #431407;
-        border: 1px solid #7c2d12;
-        color: #fdba74;
-      }
-      .ri-advice-item { margin-bottom: 6px; display: flex; gap: 8px; }
-      .ri-advice-item:last-child { margin-bottom: 0; }
-      
-      .ri-event-pill {
-        color: var(--ri-accent);
-        background: rgba(59, 130, 246, 0.1);
-        border: 1px solid rgba(59, 130, 246, 0.2);
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-size: 9px;
-      }
-
-      .ri-class-box {
-        background: var(--ri-header-bg);
-        border: 1px solid var(--ri-border);
-        border-radius: 6px;
-        padding: 8px;
-        font-size: 11px;
-        color: var(--ri-text);
-        margin-bottom: 12px;
-        word-break: break-all;
-      }
-      .ri-class-label {
-        font-size: 9px;
-        font-weight: bold;
-        color: var(--ri-accent);
-        text-transform: uppercase;
-        margin-bottom: 4px;
+      @keyframes ri-fade-in-out {
+        0% { opacity: 0; transform: scale(0.8); }
+        20% { opacity: 1; transform: scale(1); }
+        80% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; transform: scale(0.8); }
       }
     `;
     document.head.appendChild(style);
@@ -199,11 +159,10 @@
     if (depth > 4) return '[Object]'; 
     if (obj === null || typeof obj !== 'object') {
       if (typeof obj === 'function') return `[Function: ${obj.name || 'anon'}]`;
-      if (typeof obj === 'symbol') return obj.toString();
       return obj;
     }
     if (seen.has(obj)) return '[Circular]';
-    if (obj.nodeType || obj instanceof Window) return `[DOM: ${obj.nodeName || 'Window'}]`;
+    if (obj.nodeType) return `[DOM: ${obj.nodeName}]`;
     seen.add(obj);
     if (Array.isArray(obj)) return obj.map(item => safeClone(item, depth + 1, seen));
     const cloned = {};
@@ -211,18 +170,13 @@
     for (const key in obj) {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
         if (internalKeys.includes(key) || key.startsWith('$$') || key.startsWith('__')) continue;
-        if (key === 'children') {
-          cloned[key] = Array.isArray(obj[key]) ? `[Array(${obj[key].length})]` : '[React Element]';
-          continue;
-        }
-        try { cloned[key] = safeClone(obj[key], depth + 1, seen); } catch (e) { cloned[key] = '[Complex Value]'; }
+        cloned[key] = safeClone(obj[key], depth + 1, seen);
       }
     }
     return cloned;
   };
 
   const getFiber = (el) => {
-    if (!el) return null;
     const key = Object.keys(el).find(k => k.startsWith('__reactFiber$') || k.startsWith('__reactInternalInstance$'));
     return el[key];
   };
@@ -259,13 +213,10 @@
   };
 
   // --- UI Assets ---
-  const logoIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-11.5 -10.23174 23 20.46348" fill="none" stroke="#3b82f6" stroke-width="1.2"><circle cx="0" cy="0" r="2.05" fill="#3b82f6"/><g><ellipse rx="11" ry="4.2"/><ellipse rx="11" ry="4.2" transform="rotate(60)"/><ellipse rx="11" ry="4.2" transform="rotate(120)"/></g></svg>`;
-  const sunIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M2 12h2"/><path d="M20 12h2"/></svg>`;
-  const moonIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`;
-  const copyIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>`;
-  const eyeIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`;
-  const eyeOffIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>`;
-  const locateIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>`;
+  const logoIcon = `<svg viewBox="-11.5 -10.23174 23 20.46348" fill="none" stroke="#3b82f6" stroke-width="1.2"><circle cx="0" cy="0" r="2.05" fill="#3b82f6"/><g><ellipse rx="11" ry="4.2"/><ellipse rx="11" ry="4.2" transform="rotate(60)"/><ellipse rx="11" ry="4.2" transform="rotate(120)"/></g></svg>`;
+  const copyIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>`;
+  const sunIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M2 12h2"/><path d="M20 12h2"/></svg>`;
+  const moonIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`;
 
   // --- UI Logic ---
 
@@ -276,7 +227,7 @@
     overlay = document.createElement('div');
     overlay.style.cssText = `position:fixed;pointer-events:none;z-index:2147483647;border:2px solid var(--ri-accent);background:rgba(59,130,246,0.1);display:none;`;
     const label = document.createElement('div');
-    label.style.cssText = `position:absolute;top:-22px;left:-2px;background:var(--ri-accent);color:white;font-size:10px;font-weight:bold;padding:2px 6px;border-radius:2px;font-family:monospace;`;
+    label.style.cssText = `position:absolute;top:-22px;left:-2px;background:var(--ri-accent);color:white;font-size:10px;font-weight:bold;padding:2px 6px;border-radius:2px;`;
     overlay.appendChild(label);
     document.body.appendChild(overlay);
 
@@ -288,7 +239,11 @@
     searchOverlay = document.createElement('div');
     searchOverlay.className = `ri-panel ri-panel-container ${currentTheme}`;
     searchOverlay.style.cssText = `position:fixed;top:20%;left:50%;transform:translateX(-50%);width:400px;z-index:2147483647;border-radius:12px;padding:20px;display:none;border-color:var(--ri-accent);`;
-    searchOverlay.innerHTML = `<input type="text" id="comp-search" placeholder="Search Component Name..." style="width:100%;background:var(--ri-header-bg);border:1px solid var(--ri-border);color:var(--text);padding:10px;border-radius:6px;outline:none;">`;
+    searchOverlay.innerHTML = `
+      <div style="font-weight:bold; font-size:12px; margin-bottom:10px; color:var(--ri-accent);">COMPONENT SEARCH</div>
+      <input type="text" id="comp-search" placeholder="Type component name..." style="width:100%;background:var(--ri-header-bg);border:1px solid var(--ri-border);color:var(--ri-text);padding:10px;border-radius:6px;outline:none;">
+      <span id="search-match-count" class="ri-search-match-info">Matches found: 0</span>
+    `;
     document.body.appendChild(searchOverlay);
 
     const handleMouseDown = (e) => {
@@ -315,266 +270,243 @@
     currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
     localStorage.setItem('ri-theme', currentTheme);
     sidePanel.className = `ri-panel ri-panel-container ${currentTheme}`;
-    searchOverlay.className = `ri-panel ri-panel-container ${currentTheme}`;
     const themeIcon = document.getElementById('theme-icon');
     if (themeIcon) themeIcon.innerHTML = currentTheme === 'dark' ? moonIcon : sunIcon;
   };
 
-  const toggleLayerMode = () => {
-    isLayerMode = !isLayerMode;
-    allLayers.forEach(l => l.remove());
-    allLayers = [];
-    if (isLayerMode) {
-      document.querySelectorAll('*').forEach(el => {
-        const f = getFiber(el);
-        if (f && f.stateNode === el) {
-          const rect = el.getBoundingClientRect();
-          if (rect.width > 0 && rect.height > 0) {
-            const l = document.createElement('div');
-            l.className = 'ri-layer-outline';
-            l.style.top = `${rect.top + window.scrollY}px`;
-            l.style.left = `${rect.left + window.scrollX}px`;
-            l.style.width = `${rect.width}px`;
-            l.style.height = `${rect.height}px`;
-            document.body.appendChild(l);
-            allLayers.push(l);
-          }
-        }
-      });
-    }
-  };
-
-  const updatePanel = (details, targetComp, elementFiber) => {
-    const hierarchy = getHierarchy(targetComp);
+  const updatePanel = (targetFiber, element) => {
     sidePanel.style.display = 'flex';
+    const hierarchy = getHierarchy(targetFiber);
+    const props = targetFiber.memoizedProps || {};
+    const state = targetFiber.memoizedState;
+    const name = getComponentName(targetFiber);
     
-    const props = targetComp.memoizedProps || {};
-    const cleanedCompProps = safeClone(props);
-    const cleanedCompState = safeClone(targetComp.memoizedState);
-    const elementProps = elementFiber.memoizedProps || {};
-    const cleanedElementProps = safeClone(elementProps);
-    const cleanedRefs = targetComp.ref ? safeClone(targetComp.ref) : (targetComp.memoizedProps?.ref ? safeClone(targetComp.memoizedProps.ref) : null);
-    
-    // Summary Data for quick viewing
-    const className = elementProps.className || elementProps.class || details.className || "";
-    const styleProp = safeClone(elementProps.style);
+    // Feature: Computed Style Explorer
+    const computedStyles = window.getComputedStyle(element);
+    const essentialStyles = {
+      display: computedStyles.display,
+      position: computedStyles.position,
+      width: computedStyles.width,
+      height: computedStyles.height,
+      margin: computedStyles.margin,
+      padding: computedStyles.padding,
+      fontSize: computedStyles.fontSize,
+      color: computedStyles.color,
+      backgroundColor: computedStyles.backgroundColor,
+      borderRadius: computedStyles.borderRadius,
+      boxShadow: computedStyles.boxShadow
+    };
 
-    const isSame = targetComp === elementFiber;
+    const audit = [];
+    if (element.tagName === 'IMG' && !element.alt) audit.push('Missing <code>alt</code> attribute.');
+    if (element.tagName === 'BUTTON' && !element.innerText && !element.getAttribute('aria-label')) audit.push('Missing accessible label.');
+    
+    const classes = element.className || "";
+    const classArray = typeof classes === 'string' ? classes.split(/\s+/).filter(Boolean) : [];
+    if (classArray.length > 12) audit.push(`<strong>CSS Bloat:</strong> Component has ${classArray.length} classes.`);
+
+    const renderTime = targetFiber.actualDuration ? targetFiber.actualDuration.toFixed(2) : '0.00';
     const events = Object.keys(props).filter(k => k.startsWith('on') && typeof props[k] === 'function');
-    const renderTime = targetComp.actualDuration ? targetComp.actualDuration.toFixed(2) : '0.00';
-    const isSlow = parseFloat(renderTime) > 1.5;
-
-    const source = targetComp._debugSource || (targetComp.type && targetComp.type._source);
-    const sourceInfo = source ? `${source.fileName.split('/').pop()}:${source.lineNumber}` : 'Unknown';
-
-    const insights = [];
-    if (isSlow) insights.push(`<strong>Render Speed:</strong> Slow render detected (${renderTime}ms). Consider using <code>React.memo()</code>.`);
-    if (Object.keys(props).length > 10) insights.push(`<strong>Prop Bloat:</strong> Component has too many props. Consider grouping.`);
-    if (hierarchy.length > 4) insights.push(`<strong>Tree Depth:</strong> Deep nesting detected. Consider Context API.`);
 
     sidePanel.innerHTML = `
       <div class="ri-drag-handle" style="padding:16px;background:var(--ri-header-bg);border-bottom:1px solid var(--ri-border);display:flex;justify-content:space-between;align-items:center;">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div class="ri-logo-container">${logoIcon}</div>
-          <span style="font-weight:700;color:var(--ri-accent);font-size:11px;letter-spacing:1px;">REACT INSPECTOR</span>
-          <button id="theme-toggle-btn" title="Toggle Theme" style="pointer-events: auto;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:20px;">${logoIcon}</div>
+          <span style="font-weight:bold;font-size:11px;">REACT INSPECTOR</span>
+          <button id="theme-toggle-btn" style="margin-left:8px;">
             <span id="theme-icon">${currentTheme === 'dark' ? moonIcon : sunIcon}</span>
           </button>
         </div>
-        <button id="ri-close" style="cursor:pointer;background:none;border:none;color:var(--ri-text-dim);font-size:20px;">&times;</button>
+        <button id="ri-close" style="font-size:20px;cursor:pointer;background:none;border:none;color:var(--ri-text-dim);">&times;</button>
       </div>
       <div style="padding:16px;overflow-y:auto;flex:1;">
-        <div style="margin-bottom:16px;">
-          <div class="ri-section-title" style="margin-top:0;">Hierarchy</div>
-          <div style="font-size:10px;display:flex;flex-wrap:wrap;gap:4px;">
-            ${hierarchy.reverse().map(name => `<span class="ri-breadcrumb" style="padding:2px 6px;border-radius:4px;">${name}</span>`).join('<span>&gt;</span>')}
-          </div>
-        </div>
-        
         <div style="margin-bottom:12px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;">
-             <h2 style="font-size:18px;font-weight:800;color:var(--ri-text);margin:0;">&lt;${details.name} /&gt;</h2>
-             <span class="ri-perf-tag ${isSlow ? 'ri-perf-slow' : 'ri-perf-fast'}">${renderTime}ms</span>
-          </div>
-          <div style="font-size:10px;color:var(--ri-text-dim);margin-top:4px;display:flex;justify-content:space-between;">
-             <span>File: ${sourceInfo}</span>
-             <span>Tag: ${details.tagName.toLowerCase()}</span>
+           <div class="ri-section-title" style="margin-top:0;">Hierarchy</div>
+           <div style="font-size:10px;display:flex;flex-wrap:wrap;gap:4px;">
+            ${hierarchy.reverse().map(n => `<span class="ri-breadcrumb" style="padding:2px 6px;border-radius:4px;">${n}</span>`).join('<span>&gt;</span>')}
           </div>
         </div>
 
-        ${className ? `
-        <div class="ri-class-box">
-          <div class="ri-class-label">Classes</div>
-          <div style="font-family: monospace; opacity: 0.9;">${className}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <h2 style="font-size:18px;font-weight:800;color:var(--ri-text);">&lt;${name} /&gt;</h2>
+          <span class="ri-perf-tag ${renderTime > 1.5 ? 'ri-perf-slow' : 'ri-perf-fast'}">${renderTime}ms</span>
         </div>
+
+        <div style="margin-bottom:16px; display:flex; gap:8px;">
+           <button class="ri-small-btn ri-primary-btn" id="btn-copy-jsx">Export as JSX</button>
+           <button class="ri-small-btn" id="btn-log-fiber">Log Fiber</button>
+        </div>
+
+        ${events.length > 0 ? `<div style="margin-bottom:12px;">${events.map(e => `<span class="ri-event-pill">${e}</span>`).join('')}</div>` : ''}
+
+        <div class="ri-section-title">
+          <span>Classes & Styles</span>
+          <button class="ri-small-btn" id="btn-toggle-classes">Reset</button>
+        </div>
+        ${classes ? `
+          <div class="ri-class-badge">
+            <div style="color:var(--ri-accent);font-weight:bold;font-size:9px;text-transform:uppercase;margin-bottom:4px;">CSS Classes</div>
+            <div id="class-container" style="display:flex; flex-wrap:wrap; gap:4px;">
+              ${classArray.map(c => `<span class="ri-event-pill" style="cursor:pointer; background:var(--ri-border); color:var(--ri-text);" onclick="this.style.opacity = this.style.opacity === '0.3' ? '1' : '0.3'; window._ri_toggle_class('${c}')">${c}</span>`).join('')}
+            </div>
+          </div>` : ''}
+          
+        <div style="color:var(--ri-accent);font-weight:bold;font-size:9px;text-transform:uppercase;margin-bottom:4px;">Computed CSS Explorer</div>
+        <div class="ri-computed-box">
+          <pre class="ri-code-block" style="padding:10px;border:none;max-height:150px;overflow-y:auto;background:transparent;">${JSON.stringify(essentialStyles, null, 2)}</pre>
+        </div>
+
+        ${audit.length > 0 ? `
+          <div class="ri-audit-box">
+            <div style="font-weight:bold;margin-bottom:6px;font-size:10px;text-transform:uppercase;">⚡ Component Audit</div>
+            ${audit.map(a => `<div style="margin-bottom:4px;">• ${a}</div>`).join('')}
+          </div>
         ` : ''}
 
-        ${styleProp && Object.keys(styleProp).length > 0 ? `
-        <div class="ri-class-box">
-          <div class="ri-class-label">Inline Styles</div>
-          <pre style="font-family: monospace; font-size: 10px; margin: 0; opacity: 0.9;">${JSON.stringify(styleProp, null, 1)}</pre>
-        </div>
-        ` : ''}
+        <input type="text" id="prop-filter" class="ri-prop-filter" placeholder="Filter props or state values...">
 
-        ${insights.length > 0 ? `
-        <div class="ri-perf-advice">
-          <div style="font-weight:bold; font-size:10px; text-transform:uppercase; margin-bottom:8px;">⚡ Component Audit</div>
-          ${insights.map(item => `<div class="ri-advice-item">• ${item}</div>`).join('')}
+        <div class="ri-section-title">
+          <span>Component Props</span>
+          <div class="ri-btn-group">
+            <button class="ri-small-btn" id="btn-map-props">Map temp1</button>
+            <button class="ri-copy-icon-btn" id="copy-props">${copyIcon}</button>
+          </div>
         </div>
-        ` : ''}
+        <pre id="pre-props" class="ri-code-block" style="padding:10px;border-radius:8px;overflow-x:auto;">${JSON.stringify(safeClone(props), null, 2)}</pre>
 
-        <div style="display:flex;gap:8px;margin-bottom:16px;">
-          <button id="btn-toggle-overlay" style="flex:2;background:var(--ri-accent);border:none;color:white;padding:8px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;">
-            ${isOverlayHidden ? eyeIcon : eyeOffIcon} <span>${isOverlayHidden ? 'Show' : 'Hide'} Highlights</span>
-          </button>
-          <button id="btn-locate" title="Locate in DOM" style="flex:0.5;background:var(--ri-header-bg);border:1px solid var(--ri-border);color:var(--ri-text);border-radius:6px;display:flex;align-items:center;justify-content:center;">${locateIcon}</button>
-          <button id="btn-log" title="Log to Console" style="flex:0.5;background:var(--ri-header-bg);border:1px solid var(--ri-border);color:var(--ri-text);border-radius:6px;display:flex;align-items:center;justify-content:center;">CLG</button>
-        </div>
-
-        <input type="text" id="prop-filter" class="ri-prop-filter" placeholder="Filter memory...">
-
-        <div class="ri-section-group">
-          <div class="ri-section-title"><span>Component Props</span><button class="ri-copy-icon-btn" id="btn-copy-comp">${copyIcon}</button></div>
-          <pre id="pre-component" class="ri-code-block" style="padding:12px;border-radius:8px;font-size:11px;overflow-x:auto;">${JSON.stringify(cleanedCompProps, null, 2)}</pre>
-        </div>
-
-        ${cleanedCompState ? `
-        <div class="ri-section-group">
-          <div class="ri-section-title"><span>Component State</span><button class="ri-copy-icon-btn" id="btn-copy-state">${copyIcon}</button></div>
-          <pre id="pre-state" class="ri-code-block" style="padding:12px;border-radius:8px;font-size:11px;overflow-x:auto;">${JSON.stringify(cleanedCompState, null, 2)}</pre>
-        </div>
-        ` : ''}
-
-        <div class="ri-section-group">
-          <div class="ri-section-title"><span>Element Attributes (DOM)</span><button class="ri-copy-icon-btn" id="btn-copy-el">${copyIcon}</button></div>
-          <pre id="pre-element" class="ri-code-block" style="padding:12px;border-radius:8px;font-size:11px;overflow-x:auto;margin-bottom:12px;">${JSON.stringify(cleanedElementProps, null, 2)}</pre>
-        </div>
-
-        ${cleanedRefs ? `
-        <div class="ri-section-group">
-          <div class="ri-section-title"><span>Refs</span><button class="ri-copy-icon-btn" id="btn-copy-refs">${copyIcon}</button></div>
-          <pre id="pre-refs" class="ri-code-block" style="padding:12px;border-radius:8px;font-size:11px;overflow-x:auto;">${JSON.stringify(cleanedRefs, null, 2)}</pre>
-        </div>
+        ${state ? `
+          <div class="ri-section-title">
+            <span>Component State</span>
+            <div class="ri-btn-group">
+              <button class="ri-small-btn" id="btn-map-state">Map temp2</button>
+              <button class="ri-copy-icon-btn" id="copy-state">${copyIcon}</button>
+            </div>
+          </div>
+          <pre id="pre-state" class="ri-code-block" style="padding:10px;border-radius:8px;overflow-x:auto;">${JSON.stringify(safeClone(state), null, 2)}</pre>
         ` : ''}
       </div>
     `;
 
+    window._ri_toggle_class = (className) => element.classList.toggle(className);
     sidePanel.querySelector('#ri-close').onclick = () => sidePanel.style.display = 'none';
-    sidePanel.querySelector('#theme-toggle-btn').onclick = (e) => { e.stopPropagation(); toggleTheme(); };
-    sidePanel.querySelector('#btn-log').onclick = () => console.log(`[Fiber: ${details.name}]`, targetComp);
+    sidePanel.querySelector('#theme-toggle-btn').onclick = toggleTheme;
+    sidePanel.querySelector('#btn-log-fiber').onclick = () => console.log(`[Fiber: ${name}]`, targetFiber);
     
-    sidePanel.querySelector('#btn-locate').onclick = () => {
-       const node = elementFiber.stateNode;
-       if (node instanceof HTMLElement) {
-          node.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          node.classList.add('ri-locate-pulse');
-          setTimeout(() => node.classList.remove('ri-locate-pulse'), 1000);
-       }
+    // Feature: Export to JSX Snippet logic
+    sidePanel.querySelector('#btn-copy-jsx').onclick = (e) => {
+       const propStrings = Object.entries(props)
+         .filter(([k]) => k !== 'children' && typeof props[k] !== 'function')
+         .map(([k, v]) => {
+           if (typeof v === 'string') return `${k}="${v}"`;
+           if (typeof v === 'object' && v !== null) return `${k}={{${JSON.stringify(v, null, 1).replace(/\n/g, '').replace(/\s+/g, ' ')}}}`;
+           return `${k}={${v}}`;
+         });
+       
+       const jsx = `<${name}\n  ${propStrings.join('\n  ')}\n/>`;
+       navigator.clipboard.writeText(jsx);
+       const btn = e.currentTarget;
+       btn.innerText = 'Copied!';
+       setTimeout(() => btn.innerText = 'Export as JSX', 1500);
     };
 
-    sidePanel.querySelector('#btn-toggle-overlay').onclick = (e) => {
-      isOverlayHidden = !isOverlayHidden;
-      if (isOverlayHidden) overlay.style.display = 'none';
-      e.currentTarget.innerHTML = `${isOverlayHidden ? eyeIcon : eyeOffIcon} <span>${isOverlayHidden ? 'Show' : 'Hide'} Highlights</span>`;
+    const mapToConsole = (data, type) => {
+      const varName = `temp${tempVarCounter++}`;
+      window[varName] = data;
+      console.log(`%c [React Inspector] %c ${name} ${type} mapped to %c window.${varName} `, 'color: #3b82f6; font-weight: bold', 'color: inherit', 'color: #3b82f6; font-weight: bold; background: #3b82f622');
     };
 
-    sidePanel.querySelector('#prop-filter').oninput = (e) => {
-      const q = e.target.value.toLowerCase();
-      const filt = (d) => {
-        if (!d) return null;
-        return Object.keys(d).filter(k => k.toLowerCase().includes(q) || JSON.stringify(d[k]).toLowerCase().includes(q)).reduce((o, k) => { o[k] = d[k]; return o; }, {});
+    sidePanel.querySelector('#btn-map-props').onclick = () => mapToConsole(props, 'Props');
+    if (state) sidePanel.querySelector('#btn-map-state').onclick = () => mapToConsole(state, 'State');
+    if (sidePanel.querySelector('#btn-toggle-classes')) {
+      sidePanel.querySelector('#btn-toggle-classes').onclick = () => {
+        element.className = classes;
+        updatePanel(targetFiber, element);
       };
-      sidePanel.querySelector('#pre-component').innerText = JSON.stringify(filt(cleanedCompProps), null, 2);
-      if (cleanedCompState) sidePanel.querySelector('#pre-state').innerText = JSON.stringify(filt(cleanedCompState), null, 2);
-      sidePanel.querySelector('#pre-element').innerText = JSON.stringify(filt(cleanedElementProps), null, 2);
-      if (cleanedRefs) sidePanel.querySelector('#pre-refs').innerText = JSON.stringify(filt(cleanedRefs), null, 2);
-    };
+    }
 
-    const handleCopy = (btn, data) => {
-      navigator.clipboard.writeText(JSON.stringify(data, null, 2));
-      const old = btn.innerHTML;
-      btn.innerHTML = '<span class="ri-copy-success">✓ COPIED</span>';
-      setTimeout(() => btn.innerHTML = old, 1500);
+    const filterInput = sidePanel.querySelector('#prop-filter');
+    filterInput.oninput = (e) => {
+      const q = e.target.value.toLowerCase();
+      const filt = (d) => Object.keys(d).filter(k => k.toLowerCase().includes(q) || JSON.stringify(d[k]).toLowerCase().includes(q)).reduce((o, k) => { o[k] = d[k]; return o; }, {});
+      sidePanel.querySelector('#pre-props').innerText = JSON.stringify(filt(safeClone(props)), null, 2);
+      if (state) sidePanel.querySelector('#pre-state').innerText = JSON.stringify(filt(safeClone(state)), null, 2);
     };
-
-    sidePanel.querySelector('#btn-copy-comp').onclick = (e) => handleCopy(e.currentTarget, cleanedCompProps);
-    sidePanel.querySelector('#btn-copy-el').onclick = (e) => handleCopy(e.currentTarget, cleanedElementProps);
-    if (cleanedCompState) sidePanel.querySelector('#btn-copy-state').onclick = (e) => handleCopy(e.currentTarget, cleanedCompState);
-    if (cleanedRefs) sidePanel.querySelector('#btn-copy-refs').onclick = (e) => handleCopy(e.currentTarget, cleanedRefs);
   };
 
   // --- Core Events ---
+
   window.addEventListener('mouseover', (e) => {
-    if (!isDevMode || isSearchMode || isOverlayHidden || isLayerMode) return;
-    const fiber = getFiber(e.target);
-    if (fiber) {
-      const targetComp = getComponentFiber(fiber);
+    if (!isDevMode || isOverlayHidden || isLayerMode) return;
+    const f = getFiber(e.target);
+    if (f) {
+      const target = getComponentFiber(f);
       const rect = e.target.getBoundingClientRect();
       overlay.style.display = 'block';
-      overlay.style.top = `${rect.top}px`;
-      overlay.style.left = `${rect.left}px`;
-      overlay.style.width = `${rect.width}px`;
-      overlay.style.height = `${rect.height}px`;
-      overlay.querySelector('div').innerText = getComponentName(targetComp);
+      overlay.style.top = `${rect.top + window.scrollY}px`; overlay.style.left = `${rect.left + window.scrollX}px`;
+      overlay.style.width = `${rect.width}px`; overlay.style.height = `${rect.height}px`;
+      overlay.querySelector('div').innerText = getComponentName(target);
     }
   });
 
   window.addEventListener('click', (e) => {
     if (!isDevMode || e.target.closest('.ri-panel')) return;
-    const fiber = getFiber(e.target);
-    if (fiber) {
+    const f = getFiber(e.target);
+    if (f) {
       e.preventDefault(); e.stopPropagation();
-      const targetComp = getComponentFiber(fiber);
-      const details = { 
-        name: getComponentName(targetComp), 
-        tagName: e.target.tagName,
-        className: e.target.className
-      };
-      updatePanel(details, targetComp, fiber);
+      const target = getComponentFiber(f);
+      updatePanel(target, e.target);
     }
   }, true);
+
+  // Search Input Event Listener (FIXED)
+  document.addEventListener('input', (e) => {
+    if (e.target.id === 'comp-search') {
+      const query = (e.target.value || '').toLowerCase();
+      let matches = 0;
+      
+      document.querySelectorAll('*').forEach(el => {
+        const f = getFiber(el);
+        if (f) {
+          const name = String(getComponentName(f) || '').toLowerCase();
+          if (query.length > 2 && name.includes(query)) {
+            el.classList.add('ri-search-highlight');
+            matches++;
+          } else {
+            el.classList.remove('ri-search-highlight');
+          }
+        }
+      });
+      
+      const countDisplay = document.getElementById('search-match-count');
+      if (countDisplay) {
+        countDisplay.innerText = `Matches found: ${matches}`;
+      }
+    }
+  });
 
   window.addEventListener('keydown', (e) => {
     const k = e.key.toLowerCase();
     if (e.altKey && k === 'i') {
       isDevMode = !isDevMode;
       initUI();
-      if (!isDevMode) {
-        overlay.style.display = 'none';
-        sidePanel.style.display = 'none';
-        if (isLayerMode) toggleLayerMode();
+      if (!isDevMode) { 
+        overlay.style.display = 'none'; 
+        sidePanel.style.display = 'none'; 
+        searchOverlay.style.display = 'none';
+        document.querySelectorAll('.ri-search-highlight').forEach(el => el.classList.remove('ri-search-highlight'));
       }
-      console.log(`React Inspector: ${isDevMode ? 'ENABLED' : 'DISABLED'}`);
     }
     if (e.altKey && k === 's') {
       if (!isDevMode) return;
       isSearchMode = !isSearchMode;
       searchOverlay.style.display = isSearchMode ? 'block' : 'none';
-      if (isSearchMode) searchOverlay.querySelector('input').focus();
-    }
-    if (e.altKey && k === 'l') {
-      if (!isDevMode) return;
-      toggleLayerMode();
-    }
-  });
-
-  // Safe Search Logic
-  document.addEventListener('input', (e) => {
-    if (e.target.id === 'comp-search') {
-      const query = (e.target.value || '').toLowerCase();
-      document.querySelectorAll('*').forEach(el => {
-        const f = getFiber(el);
-        if (f) {
-          const name = String(getComponentName(f) || '').toLowerCase();
-          if (name && name.includes(query) && query.length > 2) {
-            el.style.boxShadow = "0 0 0 2px var(--ri-accent) inset";
-          } else {
-            el.style.boxShadow = "";
-          }
-        }
-      });
+      if (isSearchMode) {
+        searchOverlay.querySelector('input').focus();
+      } else {
+        document.querySelectorAll('.ri-search-highlight').forEach(el => el.classList.remove('ri-search-highlight'));
+      }
     }
   });
 
-  console.log('%c React Inspector Pro 1.5.1 Loaded ', 'background:#3b82f6;color:white;font-weight:bold;padding:4px;border-radius:4px;');
+  console.log('%c React Inspector Pro 1.8.3 Loaded ', 'background:#3b82f6;color:white;font-weight:bold;padding:4px;');
 })();
