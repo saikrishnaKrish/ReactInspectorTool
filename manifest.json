@@ -1,40 +1,33 @@
 {
   "manifest_version": 3,
-  "name": "React Component Layer Inspector",
-  "version": "1.0",
-  "description": "Inspect React components, videos, and images directly on the page layers.",
-  "permissions": [
-    "activeTab",
-    "scripting"
-  ],
+  "name": "React Inspector Pro",
+  "version": "1.5.1",
+  "description": "On-page React component inspector with props, state, refs, and performance auditing.",
+  "author": "Sai Krishna Kanteti",
   "action": {
-    "default_title": "Toggle Dev Mode",
-    "default_icon": {
-      "16": "icons/icon16.png",
-      "48": "icons/icon48.png",
-      "128": "icons/icon128.png"
-    }
+    "default_title": "React Inspector Pro"
   },
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
   "content_scripts": [
     {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "content.js"
-      ]
+      "matches": ["<all_urls>"],
+      "js": ["inject.js"],
+      "run_at": "document_end",
+      "world": "MAIN"
     }
   ],
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "inject.js",
-        "dist/loader.js",
-        "dist/inject.obf.js"
-      ],
-      "matches": [
-        "<all_urls>"
-      ]
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y",
+        "mac": "Command+Shift+Y"
+      }
     }
-  ]
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
 }
