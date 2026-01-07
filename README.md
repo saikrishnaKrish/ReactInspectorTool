@@ -26,7 +26,7 @@ Interactive UI: A draggable, themeable (Dark/Light) side panel that persists you
 
 Clone the Repository:
 
-git clone [https://github.com/your-username/react-inspector-pro.git](https://github.com/your-username/react-inspector-pro.git)
+git clone [[https://github.com/your-username/react-inspector-pro.git](https://github.com/your-username/react-inspector-pro.git)](https://github.com/saikrishnaKrish/ReactInspecorTool)
 
 
 Open Extensions Page: Navigate to chrome://extensions/ or edge://extensions/.
