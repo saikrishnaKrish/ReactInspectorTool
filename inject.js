@@ -1,7 +1,7 @@
 /**
  * inject.js - React Inspector Pro (Enterprise Suite)
- * Features: Prop/State/Ref/Style Inspection, JSX Export, a11y Audit, Performance, Event Map.
- * VERSION: 1.8.3 - Restored & Enhanced Search Logic (Alt+S).
+ * Features: Prop/State Inspection, Class Toggling, JSX Export, Search (Alt+S).
+ * VERSION: 1.9.7 - Stability: Fixed innerText TypeErrors with defensive checks.
  */
 
 (function() {
@@ -17,7 +17,6 @@
   let overlay = null;
   let sidePanel = null;
   let searchOverlay = null;
-  let allLayers = [];
 
   let isDragging = false;
   let offsetX, offsetY;
@@ -105,13 +104,11 @@
 
       .ri-layer-outline {
         position: fixed; pointer-events: none; z-index: 2147483646;
-        border: 1px solid rgba(59, 130, 246, 0.4); background: rgba(59, 130, 246, 0.05);
+        border: 2px solid var(--ri-accent); background: rgba(59, 130, 246, 0.1);
       }
 
       .ri-btn-group { display: flex; gap: 4px; }
       .ri-small-btn { font-size: 9px; padding: 5px 10px; border: 1px solid var(--ri-border); border-radius: 4px; cursor: pointer; background: var(--ri-bg); color: var(--ri-text-dim); transition: all 0.2s; }
-      
-      /* Fixed Hover Colors */
       .ri-small-btn:hover { border-color: var(--ri-accent); color: var(--ri-accent); background: var(--ri-header-bg); }
       
       .ri-primary-btn { background: var(--ri-accent); color: white; border: none; font-weight: bold; }
@@ -124,18 +121,8 @@
         border-radius: 0 6px 6px 0;
       }
       
-      .ri-search-match-info {
-        font-size: 10px;
-        color: var(--ri-accent);
-        font-weight: bold;
-        margin-top: 8px;
-        display: block;
-      }
-
-      .ri-search-highlight {
-        box-shadow: 0 0 0 3px var(--ri-accent) inset, 0 0 20px var(--ri-accent);
-        transition: box-shadow 0.2s;
-      }
+      .ri-search-match-info { font-size: 10px; color: var(--ri-accent); font-weight: bold; margin-top: 8px; display: block; }
+      .ri-search-highlight { box-shadow: 0 0 0 3px var(--ri-accent) inset, 0 0 20px var(--ri-accent); transition: box-shadow 0.2s; }
 
       .ri-copy-success {
         color: #22c55e;
@@ -177,6 +164,7 @@
   };
 
   const getFiber = (el) => {
+    if (!el) return null;
     const key = Object.keys(el).find(k => k.startsWith('__reactFiber$') || k.startsWith('__reactInternalInstance$'));
     return el[key];
   };
@@ -225,9 +213,12 @@
     injectStyles();
 
     overlay = document.createElement('div');
-    overlay.style.cssText = `position:fixed;pointer-events:none;z-index:2147483647;border:2px solid var(--ri-accent);background:rgba(59,130,246,0.1);display:none;`;
+    overlay.className = 'ri-layer-outline';
+    overlay.style.display = 'none';
+    
     const label = document.createElement('div');
-    label.style.cssText = `position:absolute;top:-22px;left:-2px;background:var(--ri-accent);color:white;font-size:10px;font-weight:bold;padding:2px 6px;border-radius:2px;`;
+    label.className = 'ri-name-label';
+    label.style.cssText = `position:absolute;top:-22px;left:-2px;background:var(--ri-accent);color:white;font-size:10px;font-weight:bold;padding:2px 6px;border-radius:2px;white-space:nowrap;`;
     overlay.appendChild(label);
     document.body.appendChild(overlay);
 
@@ -281,32 +272,20 @@
     const state = targetFiber.memoizedState;
     const name = getComponentName(targetFiber);
     
-    // Feature: Computed Style Explorer
     const computedStyles = window.getComputedStyle(element);
     const essentialStyles = {
       display: computedStyles.display,
       position: computedStyles.position,
       width: computedStyles.width,
       height: computedStyles.height,
-      margin: computedStyles.margin,
-      padding: computedStyles.padding,
-      fontSize: computedStyles.fontSize,
-      color: computedStyles.color,
-      backgroundColor: computedStyles.backgroundColor,
-      borderRadius: computedStyles.borderRadius,
-      boxShadow: computedStyles.boxShadow
+      color: computedStyles.color
     };
 
-    const audit = [];
-    if (element.tagName === 'IMG' && !element.alt) audit.push('Missing <code>alt</code> attribute.');
-    if (element.tagName === 'BUTTON' && !element.innerText && !element.getAttribute('aria-label')) audit.push('Missing accessible label.');
-    
     const classes = element.className || "";
-    const classArray = typeof classes === 'string' ? classes.split(/\s+/).filter(Boolean) : [];
-    if (classArray.length > 12) audit.push(`<strong>CSS Bloat:</strong> Component has ${classArray.length} classes.`);
-
+    const classStr = typeof classes === 'string' ? classes : (classes.baseVal || "");
+    const classArray = classStr.split(/\s+/).filter(Boolean);
+    
     const renderTime = targetFiber.actualDuration ? targetFiber.actualDuration.toFixed(2) : '0.00';
-    const events = Object.keys(props).filter(k => k.startsWith('on') && typeof props[k] === 'function');
 
     sidePanel.innerHTML = `
       <div class="ri-drag-handle" style="padding:16px;background:var(--ri-header-bg);border-bottom:1px solid var(--ri-border);display:flex;justify-content:space-between;align-items:center;">
@@ -337,62 +316,58 @@
            <button class="ri-small-btn" id="btn-log-fiber">Log Fiber</button>
         </div>
 
-        ${events.length > 0 ? `<div style="margin-bottom:12px;">${events.map(e => `<span class="ri-event-pill">${e}</span>`).join('')}</div>` : ''}
-
         <div class="ri-section-title">
-          <span>Classes & Styles</span>
-          <button class="ri-small-btn" id="btn-toggle-classes">Reset</button>
+          <span>Classes (Toggle)</span>
+          <button class="ri-small-btn" id="btn-reset-classes">Reset</button>
         </div>
-        ${classes ? `
-          <div class="ri-class-badge">
-            <div style="color:var(--ri-accent);font-weight:bold;font-size:9px;text-transform:uppercase;margin-bottom:4px;">CSS Classes</div>
-            <div id="class-container" style="display:flex; flex-wrap:wrap; gap:4px;">
-              ${classArray.map(c => `<span class="ri-event-pill" style="cursor:pointer; background:var(--ri-border); color:var(--ri-text);" onclick="this.style.opacity = this.style.opacity === '0.3' ? '1' : '0.3'; window._ri_toggle_class('${c}')">${c}</span>`).join('')}
-            </div>
-          </div>` : ''}
+        <div id="class-container" style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:12px;">
+          ${classArray.map(c => `<span class="ri-event-pill" style="cursor:pointer; background:var(--ri-border); color:var(--ri-text);" data-class="${c}">${c}</span>`).join('')}
+        </div>
           
-        <div style="color:var(--ri-accent);font-weight:bold;font-size:9px;text-transform:uppercase;margin-bottom:4px;">Computed CSS Explorer</div>
+        <div class="ri-section-title">Computed Styles</div>
         <div class="ri-computed-box">
-          <pre class="ri-code-block" style="padding:10px;border:none;max-height:150px;overflow-y:auto;background:transparent;">${JSON.stringify(essentialStyles, null, 2)}</pre>
+          <pre class="ri-code-block" style="padding:10px;border:none;max-height:100px;overflow-y:auto;background:transparent;">${JSON.stringify(essentialStyles, null, 2)}</pre>
         </div>
 
-        ${audit.length > 0 ? `
-          <div class="ri-audit-box">
-            <div style="font-weight:bold;margin-bottom:6px;font-size:10px;text-transform:uppercase;">⚡ Component Audit</div>
-            ${audit.map(a => `<div style="margin-bottom:4px;">• ${a}</div>`).join('')}
-          </div>
-        ` : ''}
-
-        <input type="text" id="prop-filter" class="ri-prop-filter" placeholder="Filter props or state values...">
+        <input type="text" id="prop-filter" class="ri-prop-filter" placeholder="Filter props or values...">
 
         <div class="ri-section-title">
-          <span>Component Props</span>
+          <span>Props</span>
           <div class="ri-btn-group">
             <button class="ri-small-btn" id="btn-map-props">Map temp1</button>
             <button class="ri-copy-icon-btn" id="copy-props">${copyIcon}</button>
           </div>
         </div>
         <pre id="pre-props" class="ri-code-block" style="padding:10px;border-radius:8px;overflow-x:auto;">${JSON.stringify(safeClone(props), null, 2)}</pre>
-
+        
         ${state ? `
           <div class="ri-section-title">
-            <span>Component State</span>
-            <div class="ri-btn-group">
-              <button class="ri-small-btn" id="btn-map-state">Map temp2</button>
-              <button class="ri-copy-icon-btn" id="copy-state">${copyIcon}</button>
-            </div>
+            <span>State</span>
+            <button class="ri-copy-icon-btn" id="copy-state">${copyIcon}</button>
           </div>
           <pre id="pre-state" class="ri-code-block" style="padding:10px;border-radius:8px;overflow-x:auto;">${JSON.stringify(safeClone(state), null, 2)}</pre>
         ` : ''}
       </div>
     `;
 
-    window._ri_toggle_class = (className) => element.classList.toggle(className);
+    // Listeners
     sidePanel.querySelector('#ri-close').onclick = () => sidePanel.style.display = 'none';
     sidePanel.querySelector('#theme-toggle-btn').onclick = toggleTheme;
     sidePanel.querySelector('#btn-log-fiber').onclick = () => console.log(`[Fiber: ${name}]`, targetFiber);
     
-    // Feature: Export to JSX Snippet logic
+    sidePanel.querySelectorAll('.ri-event-pill').forEach(pill => {
+      pill.onclick = () => {
+        const className = pill.getAttribute('data-class');
+        element.classList.toggle(className);
+        pill.style.opacity = element.classList.contains(className) ? '1' : '0.3';
+      };
+    });
+
+    sidePanel.querySelector('#btn-reset-classes').onclick = () => {
+      element.className = classStr;
+      updatePanel(targetFiber, element);
+    };
+
     sidePanel.querySelector('#btn-copy-jsx').onclick = (e) => {
        const propStrings = Object.entries(props)
          .filter(([k]) => k !== 'children' && typeof props[k] !== 'function')
@@ -401,50 +376,58 @@
            if (typeof v === 'object' && v !== null) return `${k}={{${JSON.stringify(v, null, 1).replace(/\n/g, '').replace(/\s+/g, ' ')}}}`;
            return `${k}={${v}}`;
          });
-       
        const jsx = `<${name}\n  ${propStrings.join('\n  ')}\n/>`;
        navigator.clipboard.writeText(jsx);
-       const btn = e.currentTarget;
-       btn.innerText = 'Copied!';
-       setTimeout(() => btn.innerText = 'Export as JSX', 1500);
+       if (e.currentTarget) e.currentTarget.innerText = 'Copied!';
+       setTimeout(() => { if (e.currentTarget) e.currentTarget.innerText = 'Export as JSX'; }, 1500);
     };
 
-    const mapToConsole = (data, type) => {
+    sidePanel.querySelector('#btn-map-props').onclick = () => {
       const varName = `temp${tempVarCounter++}`;
-      window[varName] = data;
-      console.log(`%c [React Inspector] %c ${name} ${type} mapped to %c window.${varName} `, 'color: #3b82f6; font-weight: bold', 'color: inherit', 'color: #3b82f6; font-weight: bold; background: #3b82f622');
+      window[varName] = props;
+      console.log(`%c [React Inspector] %c ${name} Props mapped to window.${varName}`, 'color:#3b82f6;font-weight:bold', '');
     };
-
-    sidePanel.querySelector('#btn-map-props').onclick = () => mapToConsole(props, 'Props');
-    if (state) sidePanel.querySelector('#btn-map-state').onclick = () => mapToConsole(state, 'State');
-    if (sidePanel.querySelector('#btn-toggle-classes')) {
-      sidePanel.querySelector('#btn-toggle-classes').onclick = () => {
-        element.className = classes;
-        updatePanel(targetFiber, element);
-      };
-    }
 
     const filterInput = sidePanel.querySelector('#prop-filter');
-    filterInput.oninput = (e) => {
-      const q = e.target.value.toLowerCase();
-      const filt = (d) => Object.keys(d).filter(k => k.toLowerCase().includes(q) || JSON.stringify(d[k]).toLowerCase().includes(q)).reduce((o, k) => { o[k] = d[k]; return o; }, {});
-      sidePanel.querySelector('#pre-props').innerText = JSON.stringify(filt(safeClone(props)), null, 2);
-      if (state) sidePanel.querySelector('#pre-state').innerText = JSON.stringify(filt(safeClone(state)), null, 2);
-    };
+    if (filterInput) {
+      filterInput.oninput = (e) => {
+        const q = e.target.value.toLowerCase();
+        const filt = (d) => Object.keys(d).filter(k => k.toLowerCase().includes(q) || JSON.stringify(d[k]).toLowerCase().includes(q)).reduce((o, k) => { o[k] = d[k]; return o; }, {});
+        
+        const propsPre = sidePanel.querySelector('#pre-props');
+        if (propsPre) propsPre.innerText = JSON.stringify(filt(safeClone(props)), null, 2);
+        
+        const statePre = sidePanel.querySelector('#pre-state');
+        if (state && statePre) statePre.innerText = JSON.stringify(filt(safeClone(state)), null, 2);
+      };
+    }
   };
 
   // --- Core Events ---
-
   window.addEventListener('mouseover', (e) => {
     if (!isDevMode || isOverlayHidden || isLayerMode) return;
+    if (e.target.closest('.ri-panel')) return;
+    
     const f = getFiber(e.target);
     if (f) {
+      initUI();
       const target = getComponentFiber(f);
       const rect = e.target.getBoundingClientRect();
-      overlay.style.display = 'block';
-      overlay.style.top = `${rect.top + window.scrollY}px`; overlay.style.left = `${rect.left + window.scrollX}px`;
-      overlay.style.width = `${rect.width}px`; overlay.style.height = `${rect.height}px`;
-      overlay.querySelector('div').innerText = getComponentName(target);
+      
+      if (overlay) {
+        overlay.style.display = 'block';
+        overlay.style.top = `${rect.top}px`; 
+        overlay.style.left = `${rect.left}px`;
+        overlay.style.width = `${rect.width}px`; 
+        overlay.style.height = `${rect.height}px`;
+        
+        const label = overlay.querySelector('.ri-name-label');
+        if (label) {
+          label.innerText = getComponentName(target);
+        }
+      }
+    } else {
+      if (overlay) overlay.style.display = 'none';
     }
   });
 
@@ -453,17 +436,15 @@
     const f = getFiber(e.target);
     if (f) {
       e.preventDefault(); e.stopPropagation();
-      const target = getComponentFiber(f);
-      updatePanel(target, e.target);
+      updatePanel(getComponentFiber(f), e.target);
     }
   }, true);
 
-  // Search Input Event Listener (FIXED)
+  // Search Logic
   document.addEventListener('input', (e) => {
     if (e.target.id === 'comp-search') {
       const query = (e.target.value || '').toLowerCase();
       let matches = 0;
-      
       document.querySelectorAll('*').forEach(el => {
         const f = getFiber(el);
         if (f) {
@@ -476,7 +457,6 @@
           }
         }
       });
-      
       const countDisplay = document.getElementById('search-match-count');
       if (countDisplay) {
         countDisplay.innerText = `Matches found: ${matches}`;
@@ -485,28 +465,29 @@
   });
 
   window.addEventListener('keydown', (e) => {
-    const k = e.key.toLowerCase();
+    const k = (e.key || '').toLowerCase();
     if (e.altKey && k === 'i') {
       isDevMode = !isDevMode;
       initUI();
       if (!isDevMode) { 
-        overlay.style.display = 'none'; 
-        sidePanel.style.display = 'none'; 
-        searchOverlay.style.display = 'none';
+        if (overlay) overlay.style.display = 'none';
+        if (sidePanel) sidePanel.style.display = 'none';
+        if (searchOverlay) searchOverlay.style.display = 'none';
         document.querySelectorAll('.ri-search-highlight').forEach(el => el.classList.remove('ri-search-highlight'));
       }
     }
     if (e.altKey && k === 's') {
       if (!isDevMode) return;
       isSearchMode = !isSearchMode;
-      searchOverlay.style.display = isSearchMode ? 'block' : 'none';
-      if (isSearchMode) {
-        searchOverlay.querySelector('input').focus();
-      } else {
-        document.querySelectorAll('.ri-search-highlight').forEach(el => el.classList.remove('ri-search-highlight'));
+      if (searchOverlay) {
+        searchOverlay.style.display = isSearchMode ? 'block' : 'none';
+        if (isSearchMode) {
+          const searchInput = searchOverlay.querySelector('input');
+          if (searchInput) searchInput.focus();
+        }
       }
     }
   });
 
-  console.log('%c React Inspector Pro 1.8.3 Loaded ', 'background:#3b82f6;color:white;font-weight:bold;padding:4px;');
+  console.log('%c React Inspector Pro 1.9.7 Loaded ', 'background:#3b82f6;color:white;font-weight:bold;padding:4px;');
 })();

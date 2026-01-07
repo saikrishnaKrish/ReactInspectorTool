@@ -1,0 +1,17 @@
+{
+    "name": "react-inspector-pro",
+    "version": "1.8.3",
+    "description": "Enterprise-grade React component inspector.",
+    "main": "inject.js",
+    "scripts": {
+        "zip": "bestzip ../react-inspector-pro.zip manifest.json inject.js content.js README.md icons/*",
+        "lint": "eslint inject.js content.js",
+        "dev": "echo 'Load the folder in chrome://extensions as unpacked'"
+    },
+    "author": "Sai Krishna Kanteti",
+    "license": "MIT",
+    "devDependencies": {
+        "bestzip": "^2.2.1",
+        "eslint": "^8.0.0"
+    }
+}

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "React Inspector Pro",
-  "version": "1.5.1",
-  "description": "On-page React component inspector with props, state, refs, and performance auditing.",
+  "version": "1.9.7",
+  "description": "High-fidelity React component inspector with JSX export, computed styles, and global search.",
   "author": "Sai Krishna Kanteti",
   "action": {
     "default_title": "React Inspector Pro"
@@ -17,6 +17,11 @@
       "js": ["inject.js"],
       "run_at": "document_end",
       "world": "MAIN"
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_start"
     }
   ],
   "commands": {
@@ -26,8 +31,5 @@
         "mac": "Command+Shift+Y"
       }
     }
-  },
-  "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'"
   }
 }
