@@ -232,7 +232,7 @@
     searchOverlay.style.cssText = `position:fixed;top:20%;left:50%;transform:translateX(-50%);width:400px;z-index:2147483647;border-radius:12px;padding:20px;display:none;border-color:var(--ri-accent);`;
     searchOverlay.innerHTML = `
       <div style="font-weight:bold; font-size:12px; margin-bottom:10px; color:var(--ri-accent);">COMPONENT SEARCH</div>
-      <input type="text" id="comp-search" placeholder="Type component name..." style="width:100%;background:var(--ri-header-bg);border:1px solid var(--ri-border);color:var(--ri-text);padding:10px;border-radius:6px;outline:none;">
+      <input type="text" id="comp-search" placeholder="Type component name..." style="width:95%;background:var(--ri-header-bg);border:1px solid var(--ri-border);color:var(--ri-text);padding:10px;border-radius:6px;outline:none;">
       <span id="search-match-count" class="ri-search-match-info">Matches found: 0</span>
     `;
     document.body.appendChild(searchOverlay);
