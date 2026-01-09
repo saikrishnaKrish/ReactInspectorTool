@@ -1,84 +1,141 @@
-React Inspector Pro ⚛️
+# ⚛️ React Inspector Pro
 
-An enterprise-grade Chrome/Edge extension that provides a deep, non-destructive look into the React Fiber tree of any website. Unlike the standard DevTools, this inspector lives directly on the page, providing real-time audits, style exploration, and code generation.
+**React Inspector Pro** is an **enterprise-grade Chrome / Edge extension** that provides a deep, **non-destructive inspection** of the React Fiber tree on any website.
 
-Version: 2.6.0 
+Unlike standard React DevTools, this inspector **lives directly on the page**, offering **real-time audits, computed style exploration, and JSX code generation** without breaking application state.
 
-Author: Sai Krishna Kanteti
+---
 
-🚀 Key Features
+## 📦 Version
 
-Deep Fiber Inspection: Access Props, State, and Refs by clicking any element on the page.
+**v2.6.0**
 
-Export as JSX: Instantly generate a ready-to-use React code snippet of the selected component with its current props.
+---
 
-Computed CSS Explorer: View the actual browser-calculated styles (padding, margin, font-size) alongside React metadata.
+## 👨‍💻 Author
 
-Component Search (Alt+S): Highlight every instance of a specific component across the entire page with real-time match counting.
+**Sai Krishna Kanteti**
 
-Console Mapping: Map any Prop or State object to a global variable (temp1, temp2) for direct debugging in the browser console.
+---
 
-Health & Accessibility Audit: Automated detection of "CSS Bloat," missing alt tags, and performance bottlenecks (Slow Render warnings).
+## 🚀 Key Features
 
-Interactive UI: A draggable, themeable (Dark/Light) side panel that persists your preferences.
+### 🔍 Deep Fiber Inspection
 
-🛠️ Installation (Developer Mode)
+* Inspect **Props**, **State**, and **Refs** by clicking any React element on the page
+* Traverse the actual **React Fiber tree**, not a virtual abstraction
 
-Clone the Repository:
+### 🧩 Export as JSX
 
-git clone [[https://github.com/your-username/react-inspector-pro.git](https://github.com/your-username/react-inspector-pro.git)](https://github.com/saikrishnaKrish/ReactInspecorTool)
+* Generate a **ready-to-use JSX snippet** for the selected component
+* Includes **current props and structure**
 
+### 🎨 Computed CSS Explorer
 
-Open Extensions Page: Navigate to chrome://extensions/ or edge://extensions/.
+* View **browser-calculated styles** (margin, padding, font-size, etc.)
+* Compare **React metadata vs actual rendered CSS**
 
-Enable Developer Mode: Toggle the switch in the top right corner.
+### 🔎 Component Search (`Alt + S`)
 
-Load Unpacked: Click "Load unpacked" and select the folder containing manifest.json.
+* Search for any React component globally
+* Highlight **all instances** on the page
+* Live match counter for quick navigation
 
-Start Inspecting: Open any React site (e.g., Airbnb, Netflix) and use the shortcuts below.
+### 🧠 Console Mapping
 
-⌨️ Keyboard Shortcuts
+* Map any **Prop** or **State** object to global variables (`temp1`, `temp2`)
+* Instantly debug from the **browser console**
 
-Shortcut
+### 🩺 Health & Accessibility Audit
 
-Action
+* Detect **CSS bloat**
+* Identify **missing `alt` attributes**
+* Highlight **slow render performance bottlenecks**
 
-Alt + I
+### 🖥️ Interactive UI
 
-Toggle Inspector (Enable/Disable hover highlights)
+* Draggable **side panel**
+* **Dark / Light theme** support
+* Preferences persist across sessions
 
-Alt + S
+---
 
-Component Search (Global finder and highlighter)
+## 🛠️ Installation (Developer Mode)
 
-Alt + L
+### 1️⃣ Clone the Repository
 
-Layer Mode (Visualizes every component boundary)
+```bash
+git clone https://github.com/saikrishnaKrish/ReactInspecorTool
+```
 
-📂 File Structure
+### 2️⃣ Open Extensions Page
 
-manifest.json: Extension configuration (MV3) using world: "MAIN" for deep React access.
+* Chrome: `chrome://extensions/`
+* Edge: `edge://extensions/`
 
-inject.js: The core engine. Handles Fiber traversal, UI rendering, and audits.
+### 3️⃣ Enable Developer Mode
 
-content.js: The bridge script that safely injects the inspector into the page context.
+* Toggle **Developer Mode** (top-right corner)
 
-icons/: Extension branding assets.
+### 4️⃣ Load the Extension
 
-🧪 Development Workflow
+* Click **Load unpacked**
+* Select the folder containing `manifest.json`
+
+### 5️⃣ Start Inspecting
+
+* Open any React website (e.g., **Airbnb**, **Netflix**)
+* Use the keyboard shortcuts below
+
+---
+
+## ⌨️ Keyboard Shortcuts
+
+| Shortcut    | Action                                               |
+| ----------- | ---------------------------------------------------- |
+| **Alt + I** | Toggle Inspector (Enable / Disable hover highlights) |
+| **Alt + S** | Component Search (Global finder & highlighter)       |
+| **Alt + L** | Layer Mode (Visualize all component boundaries)      |
+
+---
+
+## 📂 Project Structure
+
+```
+react-inspector-pro/
+├── manifest.json     # Extension configuration (MV3)
+├── inject.js         # Core engine (Fiber traversal, UI rendering, audits)
+├── content.js        # Bridge script for safe page injection
+├── icons/            # Extension branding assets
+```
+
+### 🔑 Technical Notes
+
+* Built with **Manifest V3**
+* Uses `world: "MAIN"` for deep React internals access
+* Fully **non-destructive** — does not mutate application state
+
+---
+
+## 🧪 Development Workflow
 
 To add new features or modify the UI:
 
-Edit inject.js.
+1. Edit **`inject.js`**
+2. Open `chrome://extensions/`
+3. Click **Reload** on the React Inspector Pro extension
+4. Refresh the tab where you are testing the extension
 
-Go to chrome://extensions/ and click the Reload icon on the React Inspector Pro card.
+---
 
-Refresh the tab where you are testing the extension.
+## 📝 License
 
-📝 License
+This project is **open-source**.
 
-This project is open-source. Feel free to contribute by opening a Pull Request!
+Contributions are welcome!
+Feel free to open a **Pull Request** or suggest improvements.
 
+---
 
 # Initial version 
 ![alt text](image.png)
