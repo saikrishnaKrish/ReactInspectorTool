@@ -83,3 +83,8 @@ This project is open-source. Feel free to contribute by opening a Pull Request!
 git add .
 git commit -m "feat: release v1.8.3 with JSX export, computed styles, and enhanced search"
 git push origin main
+
+
+
+# Initial version 
+![alt text](image.png)

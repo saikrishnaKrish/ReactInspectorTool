@@ -1,20 +1,17 @@
 /**
- * content.js
- * Injects a guarded loader that will only load the obfuscated file if extension runtime is present.
+ * content.js - React Inspector Pro Loader
+ * Matches: <all_urls>
+ * World: ISOLATED
  */
 
-const injectScript = () => {
-  const script = document.createElement('script');
-  script.src = chrome.runtime.getURL('dist/loader.js');
-  script.onload = () => script.remove();
-  (document.head || document.documentElement).appendChild(script);
-};
+// Since the manifest uses world: "MAIN" for inject.js, content.js
+// can be used for secondary messaging or browser-level triggers.
+console.log("React Inspector Pro: Content bridge loaded.");
 
-// Inject the loader immediately on page load
-injectScript();
-
-window.addEventListener('message', (event) => {
-  if (event.data.type === 'REACT_INSPECTOR_DATA') {
-    console.log('%c React Inspector ', 'background: #3b82f6; color: #fff; border-radius: 2px;', event.data.details);
+// Optional: listen for action click from manifest.json
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === "toggle_inspector") {
+    // Dispatch a custom event that inject.js (MAIN world) can listen to
+    window.dispatchEvent(new CustomEvent('RI_TOGGLE_MANUAL'));
   }
 });
