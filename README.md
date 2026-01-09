@@ -5,9 +5,7 @@
 Unlike standard React DevTools, this inspector **lives directly on the page**, offering **real-time audits, computed style exploration, and JSX code generation** without breaking application state.
 
 ---
-
-React DevTools gets you into the code — but still breaks flow and forces context switches. ReactInspectorTool brings debugging back to the page with true computed style visibility, one-click export, and faster navigation — so developers spend time solving problems, not navigating interfaces.
-
+A page-first React debugging tool that removes context switching and shows what the browser actually renders.
 ---
 
 ## 📦 Version
