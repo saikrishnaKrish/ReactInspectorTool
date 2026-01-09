@@ -2,7 +2,7 @@ React Inspector Pro ⚛️
 
 An enterprise-grade Chrome/Edge extension that provides a deep, non-destructive look into the React Fiber tree of any website. Unlike the standard DevTools, this inspector lives directly on the page, providing real-time audits, style exploration, and code generation.
 
-Version: 1.8.3
+Version: 2.6.0 
 
 Author: Sai Krishna Kanteti
 
@@ -78,12 +78,6 @@ Refresh the tab where you are testing the extension.
 📝 License
 
 This project is open-source. Feel free to contribute by opening a Pull Request!
-
-# Recommended Commit for this version
-git add .
-git commit -m "feat: release v1.8.3 with JSX export, computed styles, and enhanced search"
-git push origin main
-
 
 
 # Initial version 
