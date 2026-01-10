@@ -1,90 +1,92 @@
-React Inspector Pro ⚛️
+# React Inspector Pro
 
-An enterprise-grade Chrome/Edge extension that provides a deep, non-destructive look into the React Fiber tree of any website. Unlike the standard DevTools, this inspector lives directly on the page, providing real-time audits, style exploration, and code generation.
+![License](https://img.shields.io/github/license/saikrishnaKrish/ReactInspectorTool)
+![Release](https://img.shields.io/github/v/release/saikrishnaKrish/ReactInspectorTool)
 
-Version: 1.8.3
+React Inspector Pro is a Chrome/Edge extension that inspects the live React Fiber tree directly on the page. It provides component inspection, JSX export, computed CSS exploration, and performance/a11y insights without switching away from the page.
 
 Author: Sai Krishna Kanteti
 
-🚀 Key Features
+---
 
-Deep Fiber Inspection: Access Props, State, and Refs by clicking any element on the page.
+## Key Features
 
-Export as JSX: Instantly generate a ready-to-use React code snippet of the selected component with its current props.
+- Deep Fiber inspection: view Props, State and Refs for components on the page
+- Export live components as JSX snippets with current props
+- Computed CSS Explorer: view browser-calculated styles side-by-side with React metadata
+- Global component search and highlighting (Alt+S)
+- Console mapping: expose selected props/state to global vars for quick debugging
+- Health & accessibility audits (missing alt, CSS bloat, slow renders)
+- Draggable, themeable side panel (light/dark) with persisted preferences
 
-Computed CSS Explorer: View the actual browser-calculated styles (padding, margin, font-size) alongside React metadata.
+---
 
-Component Search (Alt+S): Highlight every instance of a specific component across the entire page with real-time match counting.
+## Quick Install (Developer Mode)
 
-Console Mapping: Map any Prop or State object to a global variable (temp1, temp2) for direct debugging in the browser console.
+1. Clone the repository:
 
-Health & Accessibility Audit: Automated detection of "CSS Bloat," missing alt tags, and performance bottlenecks (Slow Render warnings).
+```bash
+git clone https://github.com/saikrishnaKrish/ReactInspectorTool.git
+cd ReactInspectorTool
+```
 
-Interactive UI: A draggable, themeable (Dark/Light) side panel that persists your preferences.
+2. Open `chrome://extensions/` (or `edge://extensions/`).
+3. Enable **Developer mode** (top-right).
+4. Click **Load unpacked** and select the project folder (where `manifest.json` is located).
+5. Open a React site and start inspecting.
 
-🛠️ Installation (Developer Mode)
+---
 
-Clone the Repository:
+## Usage & Shortcuts
 
-git clone [[https://github.com/your-username/react-inspector-pro.git](https://github.com/your-username/react-inspector-pro.git)](https://github.com/saikrishnaKrish/ReactInspecorTool)
+| Shortcut | Action |
+|---:|:---|
+| Alt + I | Toggle Inspector (enable/disable hover highlights) |
+| Alt + S | Component search (global finder & highlighter) |
+| Alt + L | Layer mode (visualize component boundaries) |
 
+---
 
-Open Extensions Page: Navigate to chrome://extensions/ or edge://extensions/.
+## File Structure
 
-Enable Developer Mode: Toggle the switch in the top right corner.
+- [manifest.json](manifest.json) — extension manifest (MV3)
+- [inject.js](inject.js) — core inspector that runs in page context
+- [content.js](content.js) — content script that injects `inject.js`
+- icons/ — extension icons and branding assets
+- README.md, LICENSE, CONTRIBUTING.md, etc.
 
-Load Unpacked: Click "Load unpacked" and select the folder containing manifest.json.
+---
 
-Start Inspecting: Open any React site (e.g., Airbnb, Netflix) and use the shortcuts below.
+## Development
 
-⌨️ Keyboard Shortcuts
+1. Edit `inject.js` or `content.js` for feature work.
+2. Reload the extension on `chrome://extensions/` and refresh the target page.
+3. Use the `generate_icons.py` script to create PNG icons if needed (requires Python).
 
-Shortcut
+Optional helper scripts (see `package.json`):
 
-Action
+```bash
+npm run obfuscate   # obfuscate inject.js into dist/inject.obf.js (optional)
+npm run assemble    # create dist_package/ for distribution
+npm run pack        # create ZIP package (Windows PowerShell helper)
+```
 
-Alt + I
+---
 
-Toggle Inspector (Enable/Disable hover highlights)
+## Packaging & Distribution
 
-Alt + S
+- Use `npm run assemble` to build `dist_package/` containing `manifest.json`, `content.js`, `inject.js` (or `dist/inject.obf.js` if obfuscated), and `icons/`.
+- Share the `dist_package/` folder or ZIP it and upload to the Chrome Web Store.
+- For private distribution inside an organization, use enterprise deployment tools.
 
-Component Search (Global finder and highlighter)
+---
 
-Alt + L
+## Contributing
 
-Layer Mode (Visualizes every component boundary)
+See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines and development workflow.
 
-📂 File Structure
+---
 
-manifest.json: Extension configuration (MV3) using world: "MAIN" for deep React access.
+## License
 
-inject.js: The core engine. Handles Fiber traversal, UI rendering, and audits.
-
-content.js: The bridge script that safely injects the inspector into the page context.
-
-icons/: Extension branding assets.
-
-🧪 Development Workflow
-
-To add new features or modify the UI:
-
-Edit inject.js.
-
-Go to chrome://extensions/ and click the Reload icon on the React Inspector Pro card.
-
-Refresh the tab where you are testing the extension.
-
-📝 License
-
-This project is open-source. Feel free to contribute by opening a Pull Request!
-
-# Recommended Commit for this version
-git add .
-git commit -m "feat: release v1.8.3 with JSX export, computed styles, and enhanced search"
-git push origin main
-
-
-
-# Initial version 
-![alt text](image.png)
+This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
