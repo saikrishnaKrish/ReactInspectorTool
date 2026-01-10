@@ -1,5 +1,14 @@
 # ⚛️ React Inspector Pro
 
+![License](https://img.shields.io/github/license/saikrishnaKrish/ReactInspectorTool)
+![Release](https://img.shields.io/github/v/release/saikrishnaKrish/ReactInspectorTool)
+
+React Inspector Pro is a Chrome/Edge extension that inspects the live React Fiber tree directly on the page. It provides component inspection, JSX export, computed CSS exploration, and performance/a11y insights without switching away from the page.
+
+Author: Sai Krishna Kanteti
+
+---
+
 **React Inspector Pro** is an **enterprise-grade Chrome / Edge extension** that provides a deep, **non-destructive inspection** of the React Fiber tree on any website.
 
 Unlike standard React DevTools, this inspector **lives directly on the page**, offering **real-time audits, computed style exploration, and JSX code generation** without breaking application state.
@@ -66,76 +75,78 @@ A page-first React debugging tool that removes context switching and shows what 
 
 ### 1️⃣ Clone the Repository
 
+---
+
+## Quick Install (Developer Mode)
+
+1. Clone the repository:
+
 ```bash
-git clone https://github.com/saikrishnaKrish/ReactInspecorTool
+git clone https://github.com/saikrishnaKrish/ReactInspectorTool.git
+cd ReactInspectorTool
 ```
 
-### 2️⃣ Open Extensions Page
-
-* Chrome: `chrome://extensions/`
-* Edge: `edge://extensions/`
-
-### 3️⃣ Enable Developer Mode
-
-* Toggle **Developer Mode** (top-right corner)
-
-### 4️⃣ Load the Extension
-
-* Click **Load unpacked**
-* Select the folder containing `manifest.json`
-
-### 5️⃣ Start Inspecting
-
-* Open any React website (e.g., **Airbnb**, **Netflix**)
-* Use the keyboard shortcuts below
+2. Open `chrome://extensions/` (or `edge://extensions/`).
+3. Enable **Developer mode** (top-right).
+4. Click **Load unpacked** and select the project folder (where `manifest.json` is located).
+5. Open a React site and start inspecting.
 
 ---
 
-## ⌨️ Keyboard Shortcuts
+## Usage & Shortcuts
 
-| Shortcut    | Action                                               |
-| ----------- | ---------------------------------------------------- |
-| **Alt + I** | Toggle Inspector (Enable / Disable hover highlights) |
-| **Alt + S** | Component Search (Global finder & highlighter)       |
-| **Alt + L** | Layer Mode (Visualize all component boundaries)      |
+| Shortcut | Action |
+|---:|:---|
+| Alt + I | Toggle Inspector (enable/disable hover highlights) |
+| Alt + S | Component search (global finder & highlighter) |
+| Alt + L | Layer mode (visualize component boundaries) |
 
 ---
 
-## 📂 Project Structure
+## File Structure
 
+- [manifest.json](manifest.json) — extension manifest (MV3)
+- [inject.js](inject.js) — core inspector that runs in page context
+- [content.js](content.js) — content script that injects `inject.js`
+- icons/ — extension icons and branding assets
+- README.md, LICENSE, CONTRIBUTING.md, etc.
+
+---
+
+## Development
+
+1. Edit `inject.js` or `content.js` for feature work.
+2. Reload the extension on `chrome://extensions/` and refresh the target page.
+3. Use the `generate_icons.py` script to create PNG icons if needed (requires Python).
+
+Optional helper scripts (see `package.json`):
+
+```bash
+npm run obfuscate   # obfuscate inject.js into dist/inject.obf.js (optional)
+npm run assemble    # create dist_package/ for distribution
+npm run pack        # create ZIP package (Windows PowerShell helper)
 ```
-react-inspector-pro/
-├── manifest.json     # Extension configuration (MV3)
-├── inject.js         # Core engine (Fiber traversal, UI rendering, audits)
-├── content.js        # Bridge script for safe page injection
-├── icons/            # Extension branding assets
-```
-
-### 🔑 Technical Notes
-
-* Built with **Manifest V3**
-* Uses `world: "MAIN"` for deep React internals access
-* Fully **non-destructive** — does not mutate application state
 
 ---
 
-## 🧪 Development Workflow
+## Packaging & Distribution
 
-To add new features or modify the UI:
-
-1. Edit **`inject.js`**
-2. Open `chrome://extensions/`
-3. Click **Reload** on the React Inspector Pro extension
-4. Refresh the tab where you are testing the extension
+- Use `npm run assemble` to build `dist_package/` containing `manifest.json`, `content.js`, `inject.js` (or `dist/inject.obf.js` if obfuscated), and `icons/`.
+- Share the `dist_package/` folder or ZIP it and upload to the Chrome Web Store.
+- For private distribution inside an organization, use enterprise deployment tools.
 
 ---
 
-## 📝 License
+## Contributing
 
-This project is **open-source**.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines and development workflow.
 
-Contributions are welcome!
-Feel free to open a **Pull Request** or suggest improvements.
+---
+
+## License
+
+This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
+
 
 ---
 
