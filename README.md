@@ -1,4 +1,4 @@
-# React Inspector Pro
+# ⚛️ React Inspector Pro
 
 ![License](https://img.shields.io/github/license/saikrishnaKrish/ReactInspectorTool)
 ![Release](https://img.shields.io/github/v/release/saikrishnaKrish/ReactInspectorTool)
@@ -9,15 +9,71 @@ Author: Sai Krishna Kanteti
 
 ---
 
-## Key Features
+**React Inspector Pro** is an **enterprise-grade Chrome / Edge extension** that provides a deep, **non-destructive inspection** of the React Fiber tree on any website.
 
-- Deep Fiber inspection: view Props, State and Refs for components on the page
-- Export live components as JSX snippets with current props
-- Computed CSS Explorer: view browser-calculated styles side-by-side with React metadata
-- Global component search and highlighting (Alt+S)
-- Console mapping: expose selected props/state to global vars for quick debugging
-- Health & accessibility audits (missing alt, CSS bloat, slow renders)
-- Draggable, themeable side panel (light/dark) with persisted preferences
+Unlike standard React DevTools, this inspector **lives directly on the page**, offering **real-time audits, computed style exploration, and JSX code generation** without breaking application state.
+
+---
+A page-first React debugging tool that removes context switching and shows what the browser actually renders.
+---
+
+## 📦 Version
+
+**v2.6.0**
+
+---
+
+## 👨‍💻 Author
+
+**Sai Krishna Kanteti**
+
+---
+
+## 🚀 Key Features
+
+### 🔍 Deep Fiber Inspection
+
+* Inspect **Props**, **State**, and **Refs** by clicking any React element on the page
+* Traverse the actual **React Fiber tree**, not a virtual abstraction
+
+### 🧩 Export as JSX
+
+* Generate a **ready-to-use JSX snippet** for the selected component
+* Includes **current props and structure**
+
+### 🎨 Computed CSS Explorer
+
+* View **browser-calculated styles** (margin, padding, font-size, etc.)
+* Compare **React metadata vs actual rendered CSS**
+
+### 🔎 Component Search (`Alt + S`)
+
+* Search for any React component globally
+* Highlight **all instances** on the page
+* Live match counter for quick navigation
+
+### 🧠 Console Mapping
+
+* Map any **Prop** or **State** object to global variables (`temp1`, `temp2`)
+* Instantly debug from the **browser console**
+
+### 🩺 Health & Accessibility Audit
+
+* Detect **CSS bloat**
+* Identify **missing `alt` attributes**
+* Highlight **slow render performance bottlenecks**
+
+### 🖥️ Interactive UI
+
+* Draggable **side panel**
+* **Dark / Light theme** support
+* Preferences persist across sessions
+
+---
+
+## 🛠️ Installation (Developer Mode)
+
+### 1️⃣ Clone the Repository
 
 ---
 
@@ -90,3 +146,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines and developme
 ## License
 
 This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
+
+
+---
+
+# Initial version 
+![alt text](image.png)
