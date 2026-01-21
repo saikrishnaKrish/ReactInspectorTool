@@ -4,12 +4,20 @@
   "version": "2.6.0",
   "description": "High-fidelity React component inspector with JSX export, computed styles, and global search.",
   "author": "Sai Krishna Kanteti",
+  "icons": {
+    "16": "icons/icon16.svg",
+    "32": "icons/icon32.svg",
+    "48": "icons/icon48.svg",
+    "128": "icons/icon128.svg"
+  },
   "action": {
-    "default_title": "React Inspector Pro"
+    "default_title": "React Inspector Pro",
+    "default_icon": "icons/icon128.svg"
   },
   "permissions": [
     "storage",
-    "activeTab"
+    "activeTab",
+    "clipboardWrite"
   ],
   "content_scripts": [
     {
