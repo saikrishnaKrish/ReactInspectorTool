@@ -1,7 +1,13 @@
 /**
- * content.js - React Inspector Pro Loader
- * Matches: <all_urls>
- * World: ISOLATED
+ * React Inspector Pro - content.js
+ * 
+ * Copyright © 2026 Sai Krishna Kanteti
+ * Licensed under the MIT License
+ * 
+ * Content script bridge for React Inspector Pro extension.
+ * Matches: <all_urls> | World: ISOLATED
+ * 
+ * Licensed under the MIT License - see LICENSE file for details.
  */
 
 // Since the manifest uses world: "MAIN" for inject.js, content.js
