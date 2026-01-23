@@ -4,7 +4,7 @@
 
 ## Overview
 
-React Inspector Pro ("the Extension") is committed to protecting your privacy. This Privacy Policy explains our data practices for the Chrome extension.
+The sole purpose of this extension is to provide visual inspection and debugging of React components directly within the browser.
 
 ## Data Collection & Storage
 
@@ -35,7 +35,7 @@ The Extension requires the following permissions to function:
 
 ## Data Handling
 
-- **All data is local**: Everything is stored in `localStorage` within your browser
+- **All data is local**: All data is local: Preferences are stored locally using Chrome’s extension storage APIs (chrome.storage) within the user’s browser.
 - **No transmission**: Your data is never sent to any server
 - **No third parties**: We don't share data with anyone
 - **Fully offline**: The extension works completely without internet connectivity
@@ -60,7 +60,7 @@ We may update this policy. Changes will be reflected in the CHANGELOG with new v
 
 ## Questions or Concerns?
 
-For inquiries about this Privacy Policy, please contact us via the extension's GitHub repository.
+For inquiries about this Privacy Policy, contact: saikrishna.kanteti@gmail.com or via the Github repository.
 
 ---
 
