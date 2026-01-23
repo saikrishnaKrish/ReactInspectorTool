@@ -14,13 +14,13 @@ React Inspector Pro ("the Extension") is committed to protecting your privacy. T
 - **Local Storage Only**: Panel collapse/expand state preferences
 
 ### What We DO NOT Collect:
-- ❌ No personal information
-- ❌ No browsing history
-- ❌ No credentials or passwords
-- ❌ No analytics or tracking
-- ❌ No cookies
-- ❌ No server communications (fully offline extension)
-- ❌ No user profiling
+- No personal information
+- No browsing history
+- No credentials or passwords
+- No analytics or tracking
+- No cookies
+- No server communications (fully offline extension)
+- No user profiling
 
 ## Permissions Explanation
 
