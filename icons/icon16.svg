@@ -3,11 +3,3 @@
   <circle cx="10.5" cy="10.5" r="4" fill="#fff"/>
   <path d="M14.5 14.5L20 20" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-12 -12 24 24" width="16" height="16" fill="none">
-  <circle cx="0" cy="0" r="2.05" fill="#3b82f6"/>
-  <g stroke="#3b82f6" stroke-width="0.9" fill="none">
-    <ellipse rx="11" ry="4.2" transform="scale(.06)" />
-    <ellipse rx="11" ry="4.2" transform="scale(.06) rotate(60)" />
-    <ellipse rx="11" ry="4.2" transform="scale(.06) rotate(120)" />
-  </g>
-</svg>
