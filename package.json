@@ -1,17 +1,19 @@
 {
     "name": "react-inspector-pro",
-    "version": "1.8.3",
-    "description": "Enterprise-grade React component inspector.",
+    "version": "2.6.1",
+    "description": "Enterprise-grade React component inspector with JSX export, computed styles, and global search.",
     "main": "inject.js",
     "scripts": {
         "zip": "bestzip ../react-inspector-pro.zip manifest.json inject.js content.js README.md icons/*",
         "lint": "eslint inject.js content.js",
-        "dev": "echo 'Load the folder in chrome://extensions as unpacked'"
+        "dev": "echo 'Load the folder in chrome://extensions as unpacked'",
+        "convert-icons": "node scripts/convert-icons.js"
     },
     "author": "Sai Krishna Kanteti",
     "license": "MIT",
     "devDependencies": {
         "bestzip": "^2.2.1",
-        "eslint": "^8.0.0"
+        "eslint": "^8.0.0",
+        "sharp": "^0.32.6"
     }
 }

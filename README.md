@@ -145,8 +145,30 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines and developme
 
 ## License
 
-This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
+**React Inspector Pro** is licensed under the **MIT License**.
 
+**Copyright © 2026 Sai Krishna Kanteti**
+
+This project is open source and free to use, modify, and distribute under the terms of the MIT License. See [LICENSE](LICENSE) for full details.
+
+### What You Can Do:
+- ✅ Use commercially
+- ✅ Modify the code
+- ✅ Distribute copies
+- ✅ Use privately
+
+### What You Must Do:
+- ✅ Include the license
+- ✅ Provide attribution to the original author
+- ✅ Include the copyright notice
+
+---
+
+## Author & Credits
+
+**Original Author:** Sai Krishna Kanteti
+
+**Repository:** https://github.com/saikrishnaKrish/ReactInspectorTool
 
 ---
 
