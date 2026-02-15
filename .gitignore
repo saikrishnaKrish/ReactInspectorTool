@@ -1,7 +1,44 @@
+# Build & Package Artifacts
 node_modules/
-.DS_Store
-.vscode/
 dist/
+dist_package/
+build/
 *.zip
+react-inspector-pro.zip
+
+# Dependencies
+package-lock.json
+yarn.lock
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
 *.log
-/.env
+
+# Testing
+coverage/
+.nyc_output/
+
+# Optional: Obfuscated files
+/dist/inject.obf.js
+
+# Internal Deployment Documentation (not for open source)
+CHROME_WEBSTORE_CHECKLIST.md
+DEPLOYMENT_GUIDE.md
+DEPLOYMENT_COMPLETE.md
+READY_FOR_DEPLOYMENT.md
+FINAL_STATUS_REPORT.md
+QUICK_START.md
+INDEX.md

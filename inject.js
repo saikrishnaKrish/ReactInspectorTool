@@ -1,23 +1,40 @@
 /**
- * inject.js - React Inspector Pro (Enterprise Suite)
- * Features: Prop/State Inspection, Class Toggling, JSX Export, Inline Search (Alt+S).
- * VERSION: 2.6.0 - Feature: Interactive CSS Box Model Visualization.
+ * React Inspector Pro - inject.js
+ * 
+ * Copyright © 2026 Sai Krishna Kanteti
+ * Licensed under the MIT License
+ * 
+ * Features: Real-time React component inspection, Props/State viewing, 
+ * JSX Export, Class Toggling, Computed Styles, Box Model Visualization, 
+ * Global Search, Color Picker, Dark/Light Theme.
+ * 
+ * VERSION: 2.6.0
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  */
 
-(function() {
+(function () {
   // --- Global State ---
   let isDevMode = false;
   let isSearchMode = false;
   let isOverlayHidden = false;
   let currentTargetFiber = null;
   let currentTargetElement = null;
-  
+
   // Track which sections are collapsed
   const collapsedSections = new Set();
-  
+
   const savedTheme = localStorage.getItem('ri-theme');
   let currentTheme = savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-  
+
   let overlay = null;
   let sidePanel = null;
 
@@ -38,23 +55,23 @@
    * and limit depth for performance.
    */
   const safeClone = (obj, depth = 0, seen = new WeakSet()) => {
-    if (depth > 4) return '[Object]'; 
+    if (depth > 4) return '[Object]';
     if (obj === null || typeof obj !== 'object') {
       if (typeof obj === 'function') return `[Function: ${obj.name || 'anon'}]`;
       return obj;
     }
     if (seen.has(obj)) return '[Circular]';
     if (obj.nodeType) return `[DOM: ${obj.nodeName}]`;
-    
+
     seen.add(obj);
-    
+
     if (Array.isArray(obj)) {
       return obj.map(item => safeClone(item, depth + 1, seen));
     }
-    
+
     const cloned = {};
     const internalKeys = ['_owner', '_store', '_self', '_source', 'alternate', 'stateNode', 'return', 'child', 'sibling', 'dependencies', 'updateQueue'];
-    
+
     for (const key in obj) {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
         if (internalKeys.includes(key) || key.startsWith('$$') || key.startsWith('__')) continue;
@@ -65,11 +82,29 @@
   };
 
   const copyToClipboard = (text) => {
+    if (navigator.clipboard && window.isSecureContext) {
+      // Modern Clipboard API (secure contexts only)
+      navigator.clipboard.writeText(text).catch(() => {
+        // Fallback for older browsers or non-secure contexts
+        fallbackCopyToClipboard(text);
+      });
+    } else {
+      fallbackCopyToClipboard(text);
+    }
+  };
+
+  const fallbackCopyToClipboard = (text) => {
     const input = document.createElement('textarea');
     input.value = text;
+    input.style.position = 'fixed';
+    input.style.opacity = '0';
     document.body.appendChild(input);
     input.select();
-    document.execCommand('copy');
+    try {
+      document.execCommand('copy');
+    } catch (e) {
+      console.warn('Copy to clipboard failed:', e);
+    }
     document.body.removeChild(input);
   };
 
@@ -121,7 +156,7 @@
 
   const injectStyles = () => {
     if (document.getElementById('react-inspector-styles')) return;
-    
+
     const style = document.createElement('style');
     style.id = 'react-inspector-styles';
     style.textContent = `
@@ -373,7 +408,7 @@
     overlay = document.createElement('div');
     overlay.className = 'ri-layer-outline';
     overlay.style.display = 'none';
-    
+
     const label = document.createElement('div');
     label.className = 'ri-name-label';
     overlay.appendChild(label);
@@ -382,7 +417,7 @@
     sidePanel = document.createElement('div');
     sidePanel.className = `ri-panel ri-panel-container ${currentTheme}`;
     sidePanel.style.cssText = `position:fixed;top:15px;right:15px;width:340px;height:auto;max-height:90vh;z-index:2147483647;border-radius:12px;display:none;`;
-    
+
     // Add Resizers
     const resizerLeft = document.createElement('div');
     resizerLeft.className = 'ri-resize-handle ri-resize-left';
@@ -390,18 +425,18 @@
     resizerBottom.className = 'ri-resize-handle ri-resize-bottom';
     const resizerCorner = document.createElement('div');
     resizerCorner.className = 'ri-resize-handle ri-resize-corner-bl';
-    
+
     sidePanel.appendChild(resizerLeft);
     sidePanel.appendChild(resizerBottom);
     sidePanel.appendChild(resizerCorner);
-    
+
     document.body.appendChild(sidePanel);
 
     // Mouse Listeners for Moving & Resizing
     const handleMouseDown = (e) => {
       const handle = e.target.closest('.ri-drag-handle');
       const resizer = e.target.closest('.ri-resize-handle');
-      
+
       if (resizer) {
         isResizing = true;
         startX = e.clientX;
@@ -411,11 +446,11 @@
         startHeight = rect.height;
         startLeft = rect.left;
         startTop = rect.top;
-        
+
         if (resizer.classList.contains('ri-resize-left')) resizeType = 'left';
         else if (resizer.classList.contains('ri-resize-bottom')) resizeType = 'bottom';
         else if (resizer.classList.contains('ri-resize-corner-bl')) resizeType = 'corner';
-        
+
         sidePanel.style.transition = 'none';
         e.preventDefault();
         return;
@@ -487,7 +522,7 @@
   const updatePanel = (targetFiber, element) => {
     currentTargetFiber = targetFiber || currentTargetFiber;
     currentTargetElement = element || currentTargetElement;
-    
+
     if (!sidePanel || !currentTargetFiber) return;
 
     sidePanel.style.display = 'flex';
@@ -495,9 +530,9 @@
     const props = currentTargetFiber.memoizedProps || {};
     const state = currentTargetFiber.memoizedState;
     const name = getComponentName(currentTargetFiber);
-    
+
     const computedStyles = window.getComputedStyle(currentTargetElement);
-    
+
     // Detailed Box Model metrics
     const cleanPx = (val) => parseInt(val) || 0;
     const box = {
@@ -507,10 +542,10 @@
       content: { w: cleanPx(computedStyles.width), h: cleanPx(computedStyles.height) }
     };
 
-    const essentialStyles = { 
-      display: computedStyles.display, 
-      position: computedStyles.position, 
-      width: computedStyles.width, 
+    const essentialStyles = {
+      display: computedStyles.display,
+      position: computedStyles.position,
+      width: computedStyles.width,
       height: computedStyles.height,
       color: rgbToHex(computedStyles.color),
       backgroundColor: rgbToHex(computedStyles.backgroundColor)
@@ -637,11 +672,11 @@
 
     // Listeners
     sidePanel.querySelector('#ri-close').onclick = () => sidePanel.style.display = 'none';
-    
+
     // Global collapse handler
     sidePanel.querySelectorAll('[data-collapse-id]').forEach(header => {
       header.onclick = (e) => {
-        if (e.target.closest('button')) return; 
+        if (e.target.closest('button')) return;
         const id = header.getAttribute('data-collapse-id');
         if (collapsedSections.has(id)) collapsedSections.delete(id);
         else collapsedSections.add(id);
@@ -750,7 +785,10 @@
     const dropperBtn = sidePanel.querySelector('#btn-eyedropper');
     if (dropperBtn) {
       dropperBtn.onclick = async () => {
-        if (!window.EyeDropper) return;
+        if (!window.EyeDropper) {
+          alert('EyeDropper API not supported in this browser. Please use Chrome 95+');
+          return;
+        }
         const dropper = new EyeDropper();
         try {
           const result = await dropper.open();
@@ -761,9 +799,27 @@
             if (recentColors.length > 10) recentColors.pop();
           }
           updatePanel();
-        } catch (e) {}
+        } catch (e) {
+          if (e.name !== 'AbortError') {
+            console.warn('EyeDropper error:', e);
+          }
+        }
       };
     }
+
+    sidePanel.querySelectorAll('.ri-mini-swatch').forEach(swatch => {
+      swatch.onclick = (e) => {
+        const colorToCopy = swatch.getAttribute('data-copy');
+        if (colorToCopy) {
+          copyToClipboard(colorToCopy);
+          const originalBg = swatch.style.background;
+          swatch.style.border = '2px solid #22c55e';
+          setTimeout(() => {
+            swatch.style.border = '1px solid var(--ri-border)';
+          }, 1000);
+        }
+      };
+    });
 
     const copyJsxBtn = sidePanel.querySelector('#btn-copy-jsx');
     if (copyJsxBtn) {
@@ -815,7 +871,7 @@
         }
       });
     }
-    
+
     const countDisplay = document.getElementById('search-match-count');
     if (countDisplay) {
       countDisplay.textContent = `Matches found: ${matches}`;
@@ -855,7 +911,7 @@
     if (e.altKey && k === 'i') {
       isDevMode = !isDevMode;
       initUI();
-      if (!isDevMode) { 
+      if (!isDevMode) {
         if (overlay) overlay.style.display = 'none';
         if (sidePanel) sidePanel.style.display = 'none';
         document.querySelectorAll('.ri-search-highlight').forEach(el => el.classList.remove('ri-search-highlight'));
