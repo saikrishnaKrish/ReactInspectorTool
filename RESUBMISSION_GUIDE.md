@@ -5,7 +5,7 @@
 ### Problem Statement
 The previous submission was rejected due to:
 - **Violation:** Remotely hosted code in a Manifest V3 extension
-- **Specific Issue:** `index.html` contained `<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>`
+  - **Specific Issue:** `index.html` contained a remote three.js script (removed)
 - **Policy:** Manifest V3 requires all extension code to be included in the package
 
 ### Resolution Completed ✅
@@ -47,8 +47,7 @@ The previous submission was rejected due to:
 
 **Original Problem:**
 ```html
-<!-- ❌ REMOVED - Violates Manifest V3 -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- ❌ REMOVED - Violates Manifest V3 (external script removed) -->
 ```
 
 **Current Solution:**

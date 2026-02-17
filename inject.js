@@ -8,7 +8,7 @@
  * JSX Export, Class Toggling, Computed Styles, Box Model Visualization, 
  * Global Search, Color Picker, Dark/Light Theme.
  * 
- * VERSION: 2.6.0
+ * VERSION: 2.6.2
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -906,6 +906,17 @@
     }
   }, true);
 
+  // Handle extension icon click from content.js via custom event
+  window.addEventListener('RI_TOGGLE_MANUAL', () => {
+    isDevMode = !isDevMode;
+    initUI();
+    if (!isDevMode) {
+      if (overlay) overlay.style.display = 'none';
+      if (sidePanel) sidePanel.style.display = 'none';
+      document.querySelectorAll('.ri-search-highlight').forEach(el => el.classList.remove('ri-search-highlight'));
+    }
+  });
+
   window.addEventListener('keydown', (e) => {
     const k = (e.key || '').toLowerCase();
     if (e.altKey && k === 'i') {
@@ -934,5 +945,5 @@
     }
   });
 
-  console.log('%c React Inspector Pro 2.6.0 Loaded ', 'background:#3b82f6; color:white; font-weight:bold; padding:4px;');
+  console.log('%c React Inspector Pro 2.6.2 Loaded ', 'background:#3b82f6; color:white; font-weight:bold; padding:4px;');
 })();
