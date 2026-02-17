@@ -5,19 +5,18 @@
  * Licensed under the MIT License
  * 
  * Content script bridge for React Inspector Pro extension.
- * Matches: <all_urls> | World: ISOLATED
+ * Handles extension icon clicks and messaging between background and main world scripts.
  * 
  * Licensed under the MIT License - see LICENSE file for details.
  */
 
-// Since the manifest uses world: "MAIN" for inject.js, content.js
-// can be used for secondary messaging or browser-level triggers.
-console.log("React Inspector Pro: Content bridge loaded.");
-
-// Optional: listen for action click from manifest.json
+// Listen for extension action (icon) click
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "toggle_inspector") {
-    // Dispatch a custom event that inject.js (MAIN world) can listen to
+    // Dispatch custom event to inject.js (MAIN world)
     window.dispatchEvent(new CustomEvent('RI_TOGGLE_MANUAL'));
+    sendResponse({ status: "sidebar toggled" });
   }
 });
+
+console.log("React Inspector Pro: Content bridge loaded.");

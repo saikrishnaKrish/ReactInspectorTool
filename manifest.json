@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "React Inspector Pro",
-  "version": "2.6.1",
+  "version": "2.6.2",
   "description": "High-fidelity React component inspector with JSX export, computed styles, and global search.",
   "author": "Sai Krishna Kanteti",
   "icons": {
@@ -22,6 +22,9 @@
   "permissions": [
     "clipboardWrite"
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "content_scripts": [
     {
       "matches": [

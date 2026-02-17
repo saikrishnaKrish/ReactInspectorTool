@@ -101,7 +101,7 @@ Before uploading, verify your package contains:
 ### Original Problem
 ```javascript
 // ❌ NOT ALLOWED in Manifest V3
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+// <removed remote three.js script - see package changes>
 ```
 
 ### Current Solution

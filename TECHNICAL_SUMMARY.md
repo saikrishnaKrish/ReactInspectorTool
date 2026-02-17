@@ -16,8 +16,8 @@ Policy: Technical Requirements - Additional Requirements for Manifest V3
 Violation: Including remotely hosted code in a Manifest V3 item
 
 Violating Content:
-  File: index.html
-  Code: <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+   File: index.html
+   Code: <removed remote three.js script - index.html deleted>
 
 Resolution: Ensure that all logic related to the extensions operation 
 is included in the extension package.

@@ -12,8 +12,8 @@
 ```
 Violation ID: Blue Argon
 Issue: Remotely hosted code in Manifest V3 extension
-File: index.html
-Code: <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+	File: index.html
+	Code: <removed remote three.js script - index.html deleted>
 Status: REJECTED ❌
 ```
 

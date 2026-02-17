@@ -9,8 +9,7 @@
 
 ## The Problem (Rejected)
 ```
-❌ index.html contained:
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+❌ index.html contained a remote three.js reference (removed in package)
 
 Violates: Manifest V3 requires all code to be in the extension package
 ```
