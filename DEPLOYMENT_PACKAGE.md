@@ -11,17 +11,17 @@ cd "C:\Users\ksai6\Downloads\extension"
 # Create the deployment ZIP file
 Compress-Archive `
   -Path manifest.json, inject.js, content.js, icons, README.md, LICENSE `
-  -DestinationPath "react-inspector-pro-v2.6.1.zip" `
+  -DestinationPath "react-inspector-pro-v2.6.3.zip" `
   -Force
 
 # Verify the ZIP was created
 Write-Host "✅ ZIP file created successfully!" -ForegroundColor Green
-dir "react-inspector-pro-v2.6.1.zip"
+dir "react-inspector-pro-v2.6.3.zip"
 
 # Optional: Show ZIP contents
 Write-Host "`n📦 Contents of ZIP file:" -ForegroundColor Blue
 Add-Type -AssemblyName System.IO.Compression.FileSystem
-$zip = [System.IO.Compression.ZipFile]::OpenRead("react-inspector-pro-v2.6.1.zip")
+$zip = [System.IO.Compression.ZipFile]::OpenRead("react-inspector-pro-v2.6.3.zip")
 $zip.Entries | Select-Object Name, @{Name="Size";Expression={$_.Length}}
 $zip.Dispose()
 
@@ -30,7 +30,7 @@ Write-Host "`n✨ Ready for submission!" -ForegroundColor Green
 
 ## What This Does
 
-1. ✅ Creates a ZIP file named `react-inspector-pro-v2.6.1.zip`
+1. ✅ Creates a ZIP file named `react-inspector-pro-v2.6.3.zip`
 2. ✅ Includes all required extension files
 3. ✅ Excludes unnecessary files (node_modules, .git, etc.)
 4. ✅ Verifies the ZIP was created
@@ -65,7 +65,7 @@ LICENSE              XXX bytes
 ## Files Included in ZIP
 
 ```
-react-inspector-pro-v2.6.1.zip
+react-inspector-pro-v2.6.3.zip
 ├── manifest.json          ← Extension configuration
 ├── inject.js              ← Main content script (882 lines)
 ├── content.js             ← Bridge script
@@ -101,10 +101,10 @@ If it's much larger, verify:
 
 Before uploading, verify:
 
-- [ ] File exists: `C:\Users\ksai6\Downloads\extension\react-inspector-pro-v2.6.1.zip`
+- [ ] File exists: `C:\Users\ksai6\Downloads\extension\react-inspector-pro-v2.6.3.zip`
 - [ ] File size: 50-100 KB (approximate)
 - [ ] ZIP contains: manifest.json, inject.js, content.js, icons/, README.md, LICENSE
-- [ ] manifest.json has version: "2.6.1"
+- [ ] manifest.json has version: "2.6.3"
 - [ ] No HTML files in ZIP
 - [ ] No node_modules in ZIP
 
@@ -121,7 +121,7 @@ https://chrome.google.com/webstore/devconsole
 
 ### Step 3: Upload Package
 - Click "Package" or "Upload new package"
-- Select: `react-inspector-pro-v2.6.1.zip`
+- Select: `react-inspector-pro-v2.6.3.zip`
 - Wait for upload to complete
 
 ### Step 4: Review Changes
@@ -130,7 +130,9 @@ https://chrome.google.com/webstore/devconsole
 - Paste this text:
 
 ```
-Manifest V3 Compliance Fix (v2.6.1)
+Manifest V3 Compliance Fix (v2.6.3)
+```
+Manifest V3 Compliance Fix (v2.6.3)
 
 - Removed external CDN dependencies (three.js)
 - All code is now locally hosted and included in the extension package
@@ -138,8 +140,6 @@ Manifest V3 Compliance Fix (v2.6.1)
 - Enhanced security and transparency
 - No functional changes to user-facing features
 ```
-
-### Step 5: Submit
 - Click "Submit for review"
 - Wait for approval (1-3 hours typical)
 
@@ -148,7 +148,7 @@ Manifest V3 Compliance Fix (v2.6.1)
 ### Issue: ZIP file too large
 ```powershell
 # Check what's in it
-$zip = [System.IO.Compression.ZipFile]::OpenRead("react-inspector-pro-v2.6.1.zip")
+$zip = [System.IO.Compression.ZipFile]::OpenRead("react-inspector-pro-v2.6.3.zip")
 $zip.Entries | Where-Object {$_.Length -gt 1MB} | Select-Object Name, Length
 $zip.Dispose()
 
@@ -205,11 +205,11 @@ This process is repeatable if you need to:
 
 Just update:
 1. Version number in manifest.json
-2. ZIP filename (e.g., v2.6.2)
+2. ZIP filename (e.g., v2.6.3)
 3. Follow steps above
 
 ---
 
 **Created:** February 15, 2026  
-**For:** React Inspector Pro v2.6.1  
+**For:** React Inspector Pro v2.6.3  
 **Status:** Ready to deploy
