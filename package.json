@@ -1,6 +1,6 @@
 {
     "name": "react-inspector-pro",
-    "version": "2.6.1",
+    "version": "2.7.0",
     "description": "Enterprise-grade React component inspector with JSX export, computed styles, and global search.",
     "main": "inject.js",
     "scripts": {
