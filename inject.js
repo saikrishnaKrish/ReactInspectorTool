@@ -8,7 +8,7 @@
  * JSX Export, Class Toggling, Computed Styles, Box Model Visualization, 
  * Global Search, Color Picker, Dark/Light Theme.
  * 
- * VERSION: 2.6.2
+ * VERSION: 2.7.0
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -47,6 +47,62 @@
   let tempVarCounter = 1;
 
   const recentColors = []; // Store colors picked by eyedropper
+
+  // Complete list of known MUI components to filter from hierarchy and component detection
+  const KNOWN_MUI_COMPONENTS = new Set([
+    // Basic layout & containers
+    'Box', 'Container', 'Paper', 'Card', 'Grid', 'Stack', 'Backdrop', 'Modal', 'Dialog', 'Drawer',
+
+    // Card compound components
+    'CardContent', 'CardHeader', 'CardActions', 'CardMedia', 'CardActionArea',
+
+    // Typography
+    'Typography', 'Link', 'Breadcrumbs',
+
+    // Buttons & interactions
+    'Button', 'IconButton', 'ButtonGroup', 'ButtonBase', 'Fab', 'LoadingButton',
+    'ToggleButton', 'ToggleButtonGroup',
+
+    // Lists & navigation
+    'List', 'ListItem', 'ListItemButton', 'ListItemText', 'ListItemAvatar', 'ListItemIcon',
+    'ListSubheader', 'Collapse', 'Divider', 'MenuItem', 'Menu', 'MenuList',
+
+    // Forms & inputs
+    'TextField', 'TextareaAutosize', 'Input', 'InputBase', 'OutlinedInput', 'FilledInput',
+    'BootstrapInput', 'StandardInput', 'FormControl', 'FormControlLabel', 'FormGroup',
+    'FormLabel', 'FormHelperText', 'Select', 'InputLabel', 'NativeSelect',
+    'Checkbox', 'CheckboxWithLabel', 'Radio', 'RadioGroup', 'Switch', 'FormSwitchBase',
+    'Rating', 'Slider', 'Autocomplete', 'Grouping',
+
+    // Data display
+    'Table', 'TableContainer', 'TableHead', 'TableBody', 'TableFooter', 'TableRow',
+    'TableCell', 'TablePagination', 'TableSortLabel', 'Pagination', 'PaginationItem',
+
+    // Tabs & steppers
+    'Tabs', 'Tab', 'TabList', 'TabPanel', 'Stepper', 'Step', 'StepLabel', 'StepContent',
+    'StepButton', 'MobileStepper',
+
+    // Accordion
+    'Accordion', 'AccordionSummary', 'AccordionDetails', 'AccordionActions',
+
+    // AppBar & navigation
+    'AppBar', 'Toolbar', 'BottomNavigation', 'BottomNavigationAction', 'SpeedDial',
+    'SpeedDialIcon', 'SpeedDialAction',
+
+    // Feedback & alerts
+    'Alert', 'AlertTitle', 'Snackbar', 'SnackbarContent', 'Skeleton', 'CircularProgress',
+    'LinearProgress', 'Badge', 'Chip',
+
+    // Surfaces & media
+    'Avatar', 'AvatarGroup', 'Tooltip', 'Popover', 'PopperUnstyled', 'Unstyled',
+
+    // Datetime pickers (if using mui lab)
+    'DatePicker', 'DateTimePicker', 'TimePicker', 'LocalizationProvider',
+
+    // Other MUI components
+    'CssBaseline', 'ThemeProvider', 'Box', 'Popper', 'Portal', 'Grow', 'Fade',
+    'Slide', 'Zoom', 'Collapse', 'Transition'
+  ]);
 
   // --- Utilities ---
 
@@ -126,23 +182,306 @@
     return fiber;
   };
 
-  const getComponentName = (fiber) => {
-    const target = getComponentFiber(fiber);
-    if (!target) return 'Anonymous';
-    const type = target.type;
-    const name = (type && (type.displayName || type.name)) || (type && type.render && type.render.name) || 'Component';
-    return String(name || 'Anonymous');
+  // Detect framework/library components (routing, state management, etc)
+  // These should be filtered out to show only user app components
+  const isFrameworkComponent = (fiber) => {
+    if (!fiber) return false;
+
+    try {
+      const type = fiber.type;
+      const props = fiber.memoizedProps || {};
+      const typeName = (type && typeof type === 'function' && (type.displayName || type.name)) || '';
+      const typeString = String(typeName);
+
+      // === SIGNAL 1: Exact name matches ===
+      const frameworkNames = [
+        'Router', 'BrowserRouter', 'HashRouter', 'MemoryRouter', 'StaticRouter',
+        'Route', 'Routes', 'Switch', 'Link', 'NavLink', 'Navigate', 'Location',
+        'Outlet', 'useNavigate', 'useLocation', 'useParams', 'useSearchParams',
+        'Provider', 'Consumer', 'Wrapper', 'Connect',
+        'ApolloProvider', 'Query', 'Mutation', 'Subscription',
+        'QueryClientProvider', 'Hydrate',
+        'AuthProvider', 'ProtectedRoute', 'PrivateRoute', 'PublicRoute',
+        'Redux', 'Store'
+      ];
+      if (frameworkNames.includes(typeName)) return true;
+
+      // === SIGNAL 2: Pattern matches ===
+      const frameworkPatterns = [
+        /Router$/i, /^Route/i, /^Link/i, /^Navigate/i,
+        /Provider$/i, /^Consumer/i, /Wrapper$/i,
+        /Apollo/i, /Query$/i, /Mutation$/i,
+        /Guard$/i, /Protected/i, /Private/i, /Public/i
+      ];
+      if (frameworkPatterns.some(p => p.test(typeString))) return true;
+
+      // === SIGNAL 3: Check component props for routing/framework indicators ===
+      // React Router components have specific props like 'path', 'element', 'children' in specific ways
+      if (props.path !== undefined || props.element !== undefined || props.component !== undefined) {
+        if (typeString.includes('Route') || typeString.includes('Router')) return true;
+      }
+
+      // === SIGNAL 4: Check parent for framework indicators ===
+      let parent = fiber.return;
+      let parentTypeName = '';
+      if (parent && parent.type && typeof parent.type === 'function') {
+        parentTypeName = parent.type.displayName || parent.type.name || '';
+      }
+      // If parent is clearly a framework component, this might be too
+      if (/Router|Route|Provider|Apollo|Query|Auth/i.test(parentTypeName)) {
+        // And this component doesn't have typical app component properties
+        if (!/^[A-Z][a-z]+[A-Z]/.test(typeString)) {  // Not typical app component naming (PascalCase)
+          return true;
+        }
+      }
+
+      return false;
+    } catch (e) {
+      return false;
+    }
   };
 
+  // Comprehensive MUI detection - works for any MUI component without hardcoding
+  const isMuiComponent = (fiber) => {
+    if (!fiber) return false;
+
+    try {
+      const type = fiber.type;
+      const props = fiber.memoizedProps || {};
+      const typeName = (type && typeof type === 'function' && (type.displayName || type.name)) || '';
+
+      // === SIGNAL 0: Context components (MUI providers/contexts) ===
+      // Anything with "Context" in the name is likely a MUI internal context
+      if (/Context$|Provider$|Consumer$/.test(typeName)) return true;
+
+      // === SIGNAL 1: Direct MUI props (strongest indicator) ===
+      if (props.sx !== undefined || props.classes !== undefined) return true;
+
+      // === SIGNAL 2: MUI classNames in DOM element ===
+      if (typeof props.className === 'string' && props.className.includes('Mui')) return true;
+
+      // === SIGNAL 3: Check displayName for MUI patterns ===
+      // MUI prefixes displays with "Mui" for most components (e.g., MuiButton, MuiCardContent)
+      if (/^Mui/.test(typeName)) return true;
+
+      // === SIGNAL 4: HOC wrapper patterns common in MUI ===
+      if (/^(Styled|withStyles|ForwardRef|Memo)\(/i.test(typeName)) {
+        // Check if wrapped content is MUI-like
+        // These patterns often wrap MUI internals
+        if (/styled|theme|material|withstyles|withclasses/i.test(typeName)) return true;
+      }
+
+      // === SIGNAL 5: Check known MUI component names ===
+      if (KNOWN_MUI_COMPONENTS.has(typeName)) return true;
+
+      // === SIGNAL 6: Check parent fiber chain for MUI indicators ===
+      // If parent/ancestors are MUI, this is likely a MUI internal component
+      let parent = fiber.return;
+      let muiParentCount = 0;
+      for (let i = 0; i < 3 && parent; i++) {
+        const parentType = parent.type;
+        const parentTypeName = (parentType && typeof parentType === 'function' && (parentType.displayName || parentType.name)) || '';
+        if (/^Mui|^Styled/.test(parentTypeName) || KNOWN_MUI_COMPONENTS.has(parentTypeName)) {
+          muiParentCount++;
+        }
+        parent = parent.return;
+      }
+      // If multiple MUI parents, this is likely a MUI internal component
+      if (muiParentCount >= 2) return true;
+
+      // === SIGNAL 7: Analyze component structure for MUI patterns ===
+      // Check if the type has specific MUI internal properties
+      if (typeof type === 'function') {
+        // MUI components often have $$typeof defined
+        if (type.$$typeof && String(type.$$typeof).includes('Symbol')) return true;
+
+        // Check the render function or prototype chain
+        const proto = Object.getPrototypeOf(type) || {};
+        const protoStr = proto.toString && proto.toString();
+        if (protoStr && /material|styled|emotion/i.test(protoStr)) return true;
+      }
+
+      // === SIGNAL 8: Common MUI component name patterns ===
+      // Even if not in KNOWN_MUI_COMPONENTS, check for typical MUI component naming
+      // Includes compound components like CardContent, ListItem, etc.
+      const commonMuiPatterns = [
+        // Compound components with suffixes
+        /^(Card|List|Table|Accordion|Step|ListItem|TableRow|TableCell)(Content|Header|Actions|Media|Body|Footer|Summary|Details|Button|Icon|Text|Avatar|Badge|Check|Secondary|Slot).*/i,
+        // Main components
+        /^(Box|Container|Paper|Card|Grid|Stack|Modal|Dialog|Drawer|AppBar|Toolbar|Menu|MenuList|Popover|Tooltip|Snackbar|Alert|Badge|Chip|Avatar|Rating|Slider|Pagination|Linear|Circular|Skeleton).*/i,
+        // Form components
+        /^(TextField|Input|FormControl|FormLabel|FormGroup|FormHelper|Select|MenuItem|Checkbox|Radio|Switch|Toggle|AutoComplete|DatePicker|TimePicker).*/i,
+        // Button variants
+        /^(Button|IconButton|Fab|Breadcrumb|Link|Typography|Divider).*/i,
+        // Navigation & structure
+        /^(Tab|Tabs|Stepper|Pagination|BottomNavigation|Sidebar|Navigation|Header|Footer|CssBaseline).*/i,
+        // Transitions & effects
+        /^(Fade|Grow|Slide|Zoom|Collapse|Expand).*/i,
+      ];
+
+      if (commonMuiPatterns.some(pattern => pattern.test(typeName))) {
+        // For compound components or common patterns, being a MUI component is very likely
+        // We're lenient here because we've already filtered out user components by their naming
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  const getComponentName = (fiber, elArg) => {
+    if (!fiber) return 'Anonymous';
+
+    const sanitizeName = (raw, el) => {
+      if (!raw) return 'Anonymous';
+      let name = String(raw).trim();
+
+      // Unwrap HOC patterns
+      name = name.replace(/^ForwardRef\((.*)\)$/i, '$1')
+        .replace(/^Styled\((.*)\)$/i, '$1')
+        .replace(/^withStyles\((.*)\)$/i, '$1')
+        .replace(/^Memo\((.*)\)$/i, '$1');
+
+      // Try to derive from element MUI classes (Box, Typography, etc)
+      if (el && el.className) {
+        try {
+          const classStr = typeof el.className === 'string' ? el.className : (el.className.baseVal || '');
+          const m = classStr.match(/Mui([A-Za-z0-9]+)(?:-.*)?/);
+          if (m && m[1]) return m[1];
+        } catch (e) { }
+      }
+
+      // Clean suffixes
+      name = name.replace(/(-root|Root|Container|Inner|Body|Base)$/i, '').trim();
+
+      return name || 'Anonymous';
+    };
+
+    const target = getComponentFiber(fiber);
+    const type = target.type;
+    const rawName = (type && (type.displayName || type.name)) || (type && type.render && type.render.name) || '';
+    const el = elArg || ((target.stateNode && target.stateNode.nodeType) ? target.stateNode : null);
+    return sanitizeName(rawName, el);
+  };
+
+  // Get app components only (for backward compatibility with getNearestAppComponent)
   const getHierarchy = (fiber) => {
     const path = [];
     let curr = fiber;
-    while (curr && path.length < 5) {
-      const name = getComponentName(curr);
-      if (name && name !== path[path.length - 1]) path.push(name);
+    // Comprehensive list of MUI context and provider names that should be filtered
+    const contextNames = new Set([
+      'FormControlContext', 'ModalContext', 'TransitionGroupContext', 'ThemeContext', 'StylesContext',
+      'GridContext', 'CardContext', 'ListContext', 'TableContext', 'AccordionContext', 'TabsContext',
+      'StepperContext', 'DrawerContext', 'MenuContext', 'SelectContext', 'InputContext', 'BadgeContext',
+      'SnackbarContext', 'PopoverContext', 'TooltipContext', 'DialogContext', 'PaginationContext'
+    ]);
+
+    // Framework/routing component names to filter out
+    const frameworkNames = new Set([
+      'Router', 'BrowserRouter', 'HashRouter', 'MemoryRouter', 'StaticRouter',
+      'Route', 'Routes', 'Switch', 'Link', 'NavLink', 'Navigate', 'Location',
+      'Outlet', 'useNavigate', 'useLocation', 'useParams', 'useSearchParams',
+      'Provider', 'Consumer', 'Wrapper', 'Connect', 'Redux', 'Store',
+      'ApolloProvider', 'Query', 'Mutation', 'Subscription', 'QueryClientProvider',
+      'AuthProvider', 'ProtectedRoute', 'PrivateRoute', 'PublicRoute', 'Protected'
+    ]);
+
+    while (curr && path.length < 12) {
+      if (typeof curr.type !== 'string') {
+        const el = (curr.stateNode && curr.stateNode.nodeType) ? curr.stateNode : null;
+        const name = getComponentName(curr, el);
+
+        // Skip MUI components, framework components, internal contexts, and unnamed/wrapper components
+        if (name && name !== 'Anonymous' && !KNOWN_MUI_COMPONENTS.has(name) && !contextNames.has(name) && !frameworkNames.has(name) && !/^Mui|Wrapper$/i.test(name) && !isMuiComponent(curr) && !isFrameworkComponent(curr)) {
+          if (name !== path[path.length - 1]) path.push(name);
+        }
+      }
       curr = curr.return;
     }
     return path;
+  };
+
+  // Get full hierarchy including both app components and MUI wrappers with metadata
+  const getFullHierarchy = (fiber) => {
+    const path = [];
+    let curr = fiber;
+    // Comprehensive list of MUI context and provider names that should be filtered
+    const contextNames = new Set([
+      'FormControlContext', 'ModalContext', 'TransitionGroupContext', 'ThemeContext', 'StylesContext',
+      'GridContext', 'CardContext', 'ListContext', 'TableContext', 'AccordionContext', 'TabsContext',
+      'StepperContext', 'DrawerContext', 'MenuContext', 'SelectContext', 'InputContext', 'BadgeContext',
+      'SnackbarContext', 'PopoverContext', 'TooltipContext', 'DialogContext', 'PaginationContext'
+    ]);
+
+    // Framework/routing component names to filter out
+    const frameworkNames = new Set([
+      'Router', 'BrowserRouter', 'HashRouter', 'MemoryRouter', 'StaticRouter',
+      'Route', 'Routes', 'Switch', 'Link', 'NavLink', 'Navigate', 'Location',
+      'Outlet', 'useNavigate', 'useLocation', 'useParams', 'useSearchParams',
+      'Provider', 'Consumer', 'Wrapper', 'Connect', 'Redux', 'Store',
+      'ApolloProvider', 'Query', 'Mutation', 'Subscription', 'QueryClientProvider',
+      'AuthProvider', 'ProtectedRoute', 'PrivateRoute', 'PublicRoute', 'Protected'
+    ]);
+
+    while (curr && path.length < 15) {
+      if (typeof curr.type !== 'string') {
+        const el = (curr.stateNode && curr.stateNode.nodeType) ? curr.stateNode : null;
+        const name = getComponentName(curr, el);
+
+        // Skip internal contexts, anonymous/wrapper components, framework components, and framework names
+        if (name && name !== 'Anonymous' && !contextNames.has(name) && !frameworkNames.has(name) && !/Wrapper$/i.test(name) && !isFrameworkComponent(curr)) {
+          // Check if it's a MUI component
+          const isMui = KNOWN_MUI_COMPONENTS.has(name) || isMuiComponent(curr);
+          // Avoid duplicates
+          if (path.length === 0 || name !== path[path.length - 1].name) {
+            path.push({ name, isMui });
+          }
+        }
+      }
+      curr = curr.return;
+    }
+    return path;
+  };
+
+  // Get nearest non-MUI app component by walking up the fiber tree
+  const getNearestAppComponent = (fiber, elArg) => {
+    // Framework/routing component names to filter out
+    const frameworkNames = new Set([
+      'Router', 'BrowserRouter', 'HashRouter', 'MemoryRouter', 'StaticRouter',
+      'Route', 'Routes', 'Switch', 'Link', 'NavLink', 'Navigate', 'Location',
+      'Outlet', 'useNavigate', 'useLocation', 'useParams', 'useSearchParams',
+      'Provider', 'Consumer', 'Wrapper', 'Connect', 'Redux', 'Store',
+      'ApolloProvider', 'Query', 'Mutation', 'Subscription', 'QueryClientProvider',
+      'AuthProvider', 'ProtectedRoute', 'PrivateRoute', 'PublicRoute', 'Protected'
+    ]);
+
+    let curr = fiber;
+    let depth = 0;
+
+    // First: walk fiber tree for app component (skip MUI and framework components)
+    while (curr && depth < 25) {
+      if (typeof curr.type !== 'string' && !isMuiComponent(curr) && !isFrameworkComponent(curr)) {
+        const name = getComponentName(curr, elArg);
+        // Also check against framework names list to be safe
+        if (name && /^[A-Z]/.test(name) && !KNOWN_MUI_COMPONENTS.has(name) && !frameworkNames.has(name)) {
+          return name;
+        }
+      }
+      curr = curr.return;
+      depth++;
+    }
+
+    // Second: use hierarchy as fallback (already filters MUI and framework)
+    const hierarchy = getHierarchy(fiber);
+    if (hierarchy.length > 0) return hierarchy[0];
+
+    // Third: last resort - return non-MUI, non-framework name from fiber
+    const name = getComponentName(fiber, elArg);
+    if (!KNOWN_MUI_COMPONENTS.has(name) && !frameworkNames.has(name)) return name;
+
+    return 'Component';
   };
 
   const rgbToHex = (rgb) => {
@@ -526,10 +865,10 @@
     if (!sidePanel || !currentTargetFiber) return;
 
     sidePanel.style.display = 'flex';
-    const hierarchy = getHierarchy(currentTargetFiber);
+    const hierarchy = getFullHierarchy(currentTargetFiber);
     const props = currentTargetFiber.memoizedProps || {};
     const state = currentTargetFiber.memoizedState;
-    const name = getComponentName(currentTargetFiber);
+    const name = getNearestAppComponent(currentTargetFiber, currentTargetElement);
 
     const computedStyles = window.getComputedStyle(currentTargetElement);
 
@@ -636,7 +975,14 @@
 
         ${createCollapsible('hierarchy', 'Hierarchy', `
           <div style="font-size:10px;display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;">
-            ${hierarchy.reverse().map(n => `<span class="ri-breadcrumb" style="padding:2px 6px;border-radius:4px;">${n}</span>`).join('<span>&gt;</span>')}
+            ${hierarchy.reverse().map(item => {
+      const style = item.isMui
+        ? 'opacity:0.6;color:var(--ri-text-dim);'
+        : 'font-weight:600;color:var(--ri-text);';
+      const badge = item.isMui ? ' 📦' : '';
+      const title = item.isMui ? 'MUI Component' : 'App Component';
+      return `<span class="ri-breadcrumb" style="padding:2px 6px;border-radius:4px;${style}" title="${title}">${item.name}${badge}</span>`;
+    }).join('<span style="opacity:0.5;">&gt;</span>')}
           </div>
         `)}
 
@@ -824,14 +1170,28 @@
     const copyJsxBtn = sidePanel.querySelector('#btn-copy-jsx');
     if (copyJsxBtn) {
       copyJsxBtn.onclick = (e) => {
-        const propStrings = Object.entries(props)
-          .filter(([k]) => k !== 'children' && typeof props[k] !== 'function')
+        // Filter out MUI-specific props for cleaner JSX export
+        const filterProps = (obj) => {
+          const filtered = {};
+          for (const [k, v] of Object.entries(obj)) {
+            // Skip MUI-specific attributes
+            if (['sx', 'classes', 'className'].includes(k)) continue;
+            if (typeof v === 'function') continue;
+            if (v === undefined) continue;
+            filtered[k] = v;
+          }
+          return filtered;
+        };
+
+        const cleanProps = filterProps(props);
+        const propStrings = Object.entries(cleanProps)
+          .filter(([k, v]) => k !== 'children' && typeof v !== 'function')
           .map(([k, v]) => {
             if (typeof v === 'string') return `${k}="${v}"`;
             if (typeof v === 'object' && v !== null) return `${k}={{${JSON.stringify(v, null, 1).replace(/\n/g, '').replace(/\s+/g, ' ')}}}`;
             return `${k}={${v}}`;
           });
-        const jsx = `<${name}\n  ${propStrings.join('\n  ')}\n/>`;
+        const jsx = `<${name}${propStrings.length ? '\n  ' + propStrings.join('\n  ') + '\n' : ''}/>`;
         copyToClipboard(jsx);
         const originalText = e.currentTarget.textContent;
         e.currentTarget.textContent = 'Copied!';
@@ -885,14 +1245,13 @@
     const f = getFiber(e.target);
     if (f) {
       initUI();
-      const target = getComponentFiber(f);
       const rect = e.target.getBoundingClientRect();
       if (overlay) {
         overlay.style.display = 'block';
         overlay.style.top = `${rect.top}px`; overlay.style.left = `${rect.left}px`;
         overlay.style.width = `${rect.width}px`; overlay.style.height = `${rect.height}px`;
         const label = overlay.querySelector('.ri-name-label');
-        if (label) label.textContent = getComponentName(target);
+        if (label) label.textContent = getNearestAppComponent(f, e.target);
       }
     } else { if (overlay) overlay.style.display = 'none'; }
   });
