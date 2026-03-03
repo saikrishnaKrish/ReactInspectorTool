@@ -313,8 +313,8 @@
         /^(TextField|Input|FormControl|FormLabel|FormGroup|FormHelper|Select|MenuItem|Checkbox|Radio|Switch|Toggle|AutoComplete|DatePicker|TimePicker).*/i,
         // Button variants
         /^(Button|IconButton|Fab|Breadcrumb|Link|Typography|Divider).*/i,
-        // Navigation & structure
-        /^(Tab|Tabs|Stepper|Pagination|BottomNavigation|Sidebar|Navigation|Header|Footer|CssBaseline).*/i,
+        // Navigation & structure (excluding generic app names: Header, Footer, Navigation, Sidebar)
+        /^(Tab|Tabs|Stepper|Pagination|CssBaseline).*/i,
         // Transitions & effects
         /^(Fade|Grow|Slide|Zoom|Collapse|Expand).*/i,
       ];
@@ -1175,7 +1175,9 @@
           const filtered = {};
           for (const [k, v] of Object.entries(obj)) {
             // Skip MUI-specific attributes
-            if (['sx', 'classes', 'className'].includes(k)) continue;
+            if (['sx', 'classes'].includes(k)) continue;
+            // Only skip className if it contains MUI-specific classes, otherwise preserve it
+            if (k === 'className' && typeof v === 'string' && /Mui/.test(v)) continue;
             if (typeof v === 'function') continue;
             if (v === undefined) continue;
             filtered[k] = v;
