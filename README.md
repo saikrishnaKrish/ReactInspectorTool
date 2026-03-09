@@ -24,13 +24,13 @@ A page-first React debugging tool that removes context switching and shows what 
 
 🌟 Key Features
 
-🛡️ Smart Library Filtering (v2.7.0): Automatically skips 10+ layers of MUI/AntD wrappers (Box, Stack, ForwardRef) to find your actual Application Component.
-⚡ Ultra-Lean Engine: Optimized from 24MB down to 207KB. Zero performance overhead in your dev environment.
-🟢 Render Tracer: Visual green-flash highlights when components update. Identify "zombie renders" and bottlenecks instantly.
-📦 One-Click JSX Export: Copy the live state of any component as a clean JSX snippet for your code editor.
-📐 Visual Box Model: Interactive diagram for Margin, Border, Padding, and Content metrics mapped directly over the UI.
-📸 Component Snip: Take high-resolution PNG snapshots of specific components for bug reports or Jira tickets.
-🔍 Global Search (Alt + S): Map your entire architecture with pulsing boundary highlights across the page.
+* 🛡️ Smart Library Filtering (v2.7.0): Automatically skips 10+ layers of MUI/AntD wrappers (Box, Stack, ForwardRef) to find your actual Application Component.
+* ⚡ Ultra-Lean Engine: Optimized from 24MB down to 207KB. Zero performance overhead in your dev environment.
+* 🟢 Render Tracer: Visual green-flash highlights when components update. Identify "zombie renders" and bottlenecks instantly.
+* 📦 One-Click JSX Export: Copy the live state of any component as a clean JSX snippet for your code editor.
+* 📐 Visual Box Model: Interactive diagram for Margin, Border, Padding, and Content metrics mapped directly over the UI.
+* 📸 Component Snip: Take high-resolution PNG snapshots of specific components for bug reports or Jira tickets.
+* 🔍 Global Search (Alt + S): Map your entire architecture with pulsing boundary highlights across the page.
 
 
 # 📸 Visual Gallery (UI React Inspector pro in live site)
